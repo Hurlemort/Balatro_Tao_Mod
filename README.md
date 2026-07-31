@@ -1,4 +1,4 @@
-# TAO Mod : Balatro's ~~second~~ Stupidest Mod™ and the ONLY mod where you can fight Sans!
+# TAO Mod : Balatro's ~~second~~ Stupidest Mod™ AKA the ONLY mod where you can fight Sans!
 
 A mod I originally made for me and my friends but, as it got bigger and got more features (and... sans...?), I decided to polish and release it ! :D
 
