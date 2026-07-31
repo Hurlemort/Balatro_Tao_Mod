@@ -1,0 +1,212 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = -1
+
+[[patches]]
+[patches.pattern]
+target = "functions/misc_functions.lua"
+pattern = '''
+if card.config.center.set == 'Tarot' or card.config.center.set == 'Planet' then
+        G.E_MANAGER:add_event(Event({
+          trigger = 'immediate',
+          func = function()
+            G.E_MANAGER:add_event(Event({
+              trigger = 'immediate',
+              func = function()
+                G.GAME.last_tarot_planet = card.config.center_key
+                  return true
+              end
+            }))
+              return true
+          end
+        }))
+      end'''
+position = "at"
+payload = '''
+if #SMODS.find_card("j_tao_flibidi") > 0 or (card.config.center.set == 'Tarot' or card.config.center.set == 'Planet') then
+        G.E_MANAGER:add_event(Event({
+          trigger = 'immediate',
+          func = function()
+            G.E_MANAGER:add_event(Event({
+              trigger = 'immediate',
+              func = function()
+                G.GAME.last_tarot_planet = card.config.center_key
+                  return true
+              end
+            }))
+              return true
+          end
+        }))
+      end'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "local card = create_card('Tarot_Planet', G.consumeables, nil, nil, nil, nil, G.GAME.last_tarot_planet, 'fool')"
+position = "at"
+payload = "local card = create_card(G.P_CENTERS[G.GAME.last_tarot_planet].set, G.consumeables, nil, nil, nil, nil, G.GAME.last_tarot_planet, 'fool')"
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if (self.ability.set == 'Planet' or (self.ability.set == 'Booster' and self.ability.name:find('Celestial'))) and #find_joker('Astronomer') > 0 then self.cost = 0 end"
+position = "after"
+payload = '''
+if #SMODS.find_card("j_tao_stargazer") > 0 then self.cost = math.floor(self.cost * (G.P_CENTERS.j_tao_stargazer.config.extra.cost_mult ^ #SMODS.find_card("j_tao_stargazer"))) end
+'''
+match_indent = true
+
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "hands = {"
+position = "before"
+payload = '''
+lagrange = { rank = "Ace", suit = "Spades", id = 14, triggers = 0},
+'''
+match_indent = true
+
+# Record/Puzzle screen effects moved to real SMODS.ScreenShader entries (items/blinds.lua) - no more unconditional per-frame canvas patch here
+
+# remaps cursor hit-testing (G.CURSOR.T/VT) to match the active screen effect's distortion
+[[patches]]
+[patches.pattern]
+target = "engine/controller.lua"
+pattern = '''
+        self.cursor_position.x, self.cursor_position.y = love.mouse.getPosition()
+        G.CURSOR.T.x = self.cursor_position.x/(G.TILESCALE*G.TILESIZE)
+        G.CURSOR.T.y = self.cursor_position.y/(G.TILESCALE*G.TILESIZE)
+        G.CURSOR.VT.x = G.CURSOR.T.x
+        G.CURSOR.VT.y = G.CURSOR.T.y'''
+position = "after"
+payload = '''
+local _effect = Tao.funcs.get_active_screen_effect()
+if _effect then
+    local _ux, _uy = _effect.remap_point(self.cursor_position.x, self.cursor_position.y)
+    G.CURSOR.T.x = _ux/(G.TILESCALE*G.TILESIZE)
+    G.CURSOR.T.y = _uy/(G.TILESCALE*G.TILESIZE)
+    G.CURSOR.VT.x = G.CURSOR.T.x
+    G.CURSOR.VT.y = G.CURSOR.T.y
+end
+'''
+match_indent = true
+
+# holds scoring until boss_math's equation overlay is solved or failed (Tao.funcs.equation_gate, items/blinds.lua)
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = '''
+                    func = function()
+                        G.FUNCS.evaluate_play()
+                        return true
+                    end'''
+position = "at"
+payload = '''
+func = function()
+    if Tao.funcs.equation_gate() then
+        return false
+    end
+    Tao.equation.active = false
+    G.FUNCS.evaluate_play()
+    return true
+end
+'''
+match_indent = true
+
+# Sixth Sense also triggers on Oops!-boosted cards
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = "if self.ability.name == 'Sixth Sense' and #context.full_hand == 1 and context.full_hand[1]:get_id() == 6 and not context.full_hand[1].sixth_sense and G.GAME.current_round.hands_played == 0 then"
+position = "at"
+payload = "if self.ability.name == 'Sixth Sense' and #context.full_hand == 1 and Tao.funcs.is_it_a_six(context.full_hand[1]) and not context.full_hand[1].sixth_sense and G.GAME.current_round.hands_played == 0 then"
+match_indent = true
+
+# Even Steven also fires on an odd card if Oops! All 6s is boosting it, since a 6 is even
+[[patches]]
+[patches.pattern]
+target = "card.lua"
+pattern = '''
+                if self.ability.name == 'Even Steven' and
+                context.other_card:get_id() <= 10 and
+                context.other_card:get_id() >= 0 and
+                context.other_card:get_id()%2 == 0
+                then'''
+position = "at"
+payload = '''
+if self.ability.name == 'Even Steven' and
+    (Tao.funcs.is_it_a_six(context.other_card) or (
+        context.other_card:get_id() <= 10 and
+        context.other_card:get_id() >= 0 and
+        context.other_card:get_id()%2 == 0
+    ))
+then'''
+match_indent = true
+
+# Once a blind's dollar reward is >= $10, drawing that many individual "$" glyphs in a row
+# overflows the reward box - show "$10+" instead. Below $10, unchanged. The end-of-blind
+# reward popup is a separate code path and is deliberately NOT touched.
+
+# Spot 1: the ante "map" screen where you choose to skip or play a blind
+# (create_UIBox_blind_choice, the upcoming/current/defeated blind row).
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "{n=G.UIT.T, config={text = string.rep(localize(\"$\"), blind_choice.config.dollars)..'+', scale = 0.35, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.MONEY, shadow = not disabled}}"
+position = "at"
+payload = "{n=G.UIT.T, config={text = (blind_choice.config.key == \"bl_tao_boss_tree\" and 'EGG') or (blind_choice.config.dollars >= 10 and (localize(\"$\")..blind_choice.config.dollars..'+')) or (string.rep(localize(\"$\"), blind_choice.config.dollars)..'+'), scale = 0.35, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.MONEY, shadow = not disabled}}"
+match_indent = true
+
+# Spot 2: hovering a blind in the run info/collection screen
+# (create_UIBox_blind_popup, the tooltip shown by create_UIBox_your_collection_blinds).
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "{n=G.UIT.O, config={object = DynaText({string = {_dollars and string.rep(localize('$'),_dollars) or '-'}, colours = {G.C.MONEY}, rotate = true, bump = true, silent = true, scale = 0.45})}},"
+position = "at"
+payload = "{n=G.UIT.O, config={object = DynaText({string = {(blind.key == 'bl_tao_boss_tree' and 'EGG') or (_dollars and ((_dollars >= 10 and (localize('$').._dollars..'+')) or string.rep(localize('$'),_dollars)) or '-')}, colours = {G.C.MONEY}, rotate = true, bump = true, silent = true, scale = 0.45})}},"
+match_indent = true
+
+# Spot 3: the top-left HUD reward text while a blind is actually being played
+# (Blind:set_blind, sets G.GAME.current_round.dollars_to_be_earned when the
+# blind becomes the current one for the round - this is what G.HUD_blind reads during play).
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "G.GAME.current_round.dollars_to_be_earned = self.dollars > 0 and (string.rep(localize('$'), self.dollars)..'') or ('')"
+position = "at"
+payload = "G.GAME.current_round.dollars_to_be_earned = (self.config.blind and self.config.blind.key == 'bl_tao_boss_tree' and 'EGG') or (self.dollars > 0 and ((self.dollars >= 10 and (localize('$')..self.dollars..'+')) or (string.rep(localize('$'), self.dollars)..'')) or (''))"
+match_indent = true
+
+# Spot 4a: same HUD text, but set from Blind:load (restoring a blind's state when a save is
+# reloaded mid-blind) instead of Blind:set_blind. The whole assignment sits behind
+# "if self.dollars > 0 then" in vanilla, which boss_tree never satisfies (dollars = 0).
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "if self.dollars > 0 then"
+position = "at"
+payload = "if self.dollars > 0 or (self.config.blind and self.config.blind.key == 'bl_tao_boss_tree') then"
+match_indent = true
+
+# Spot 4b: the assignment itself, now reachable for boss_tree via 4a's guard.
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "G.GAME.current_round.dollars_to_be_earned = string.rep(localize('$'), self.dollars)..''"
+position = "at"
+payload = "G.GAME.current_round.dollars_to_be_earned = (self.config.blind and self.config.blind.key == 'bl_tao_boss_tree' and 'EGG') or (self.dollars >= 10 and (localize('$')..self.dollars..'+')) or (string.rep(localize('$'), self.dollars)..'')"
+match_indent = true
+
+# blind-select screen computes its own preview number before set_blind runs, so a
+# flat_chips blind (sans) would still advertise the full ante-scaled requirement there
+[[patches]]
+[patches.pattern]
+target = "functions/UI_definitions.lua"
+pattern = "local blind_amt = get_blind_amount(G.GAME.round_resets.blind_ante)*blind_choice.config.mult*G.GAME.starting_params.ante_scaling"
+position = "at"
+payload = "local blind_amt = blind_choice.config.flat_chips or (get_blind_amount(G.GAME.round_resets.blind_ante)*blind_choice.config.mult*G.GAME.starting_params.ante_scaling)"
+match_indent = true

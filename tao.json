@@ -1,0 +1,15 @@
+{
+  "id": "tao",
+  "name": "TAO",
+  "display_name": "TAO",
+  "author": ["Hurlemort"],
+  "description": "Balatro mod (ft sans the skeleton and my friends)",
+  "prefix": "tao",
+  "prefixcomment":"tao",
+  "main_file": "tao.lua",
+  "priority": 7181039757483920,
+  "badge_colour": "aa00ff",
+  "badge_text_colour": "ffffff",
+  "version": "1.0.0",
+  "dependencies": ["Steamodded (>=1.0.0~BETA-0614a)"]
+}
