@@ -68,6 +68,12 @@ function Tao.funcs.multiply(card, multiplier)
     end
 end
 
+-- centre of a card in screen pixels, for effects drawn straight to the screen
+function Tao.funcs.card_screen_pos(card)
+    return (card.VT.x + card.VT.w/2 + G.ROOM.T.x) * G.TILESIZE * G.TILESCALE,
+           (card.VT.y + card.VT.h/2 + G.ROOM.T.y) * G.TILESIZE * G.TILESCALE
+end
+
 function Tao.funcs.get_id(card, area)
     for id, c in pairs(area) do
         if c == card then
@@ -696,22 +702,37 @@ function Tao.funcs.update_angry_birds(dt)
         end
     end
 
+    -- a reloaded run asks to jump the movie to the watch time its mult was saved at
+    if ab.video and ab.seek_to then
+        pcall(function() ab.video:seek(ab.seek_to) end)
+        ab.video_last_frame_idx = nil
+        ab.seek_to = nil
+    end
+
     -- rewinding restarts picture and audio together, since both live on the one Video
     if ab.video then
-        local ok_play, playing = pcall(function() return ab.video:isPlaying() end)
-        if ok_play then
-            if playing then
-                ab.started = true
-            elseif ab.started then
-                if not ab.finished then
-                    check_for_unlock({ type = "ach_tao_angry_birds_movie" })
+        if ab.present then
+            local ok_play, playing = pcall(function() return ab.video:isPlaying() end)
+            if ok_play then
+                if playing then
+                    ab.started = true
+                elseif ab.started then
+                    ab.finished = true
+                    pcall(function()
+                        ab.video:rewind()
+                        ab.video:play()
+                    end)
+                else
+                    pcall(function() ab.video:play() end)
                 end
-                ab.finished = true
-                pcall(function()
-                    ab.video:rewind()
-                    ab.video:play()
-                end)
             end
+        elseif ab.started then
+            -- no copy on screen: halt picture and audio, back to the top for next time
+            pcall(function()
+                ab.video:pause()
+                ab.video:rewind()
+            end)
+            ab.started = false
         end
     end
 
@@ -754,7 +775,9 @@ function Tao.funcs.draw_angry_birds_canvas()
 
         -- only resamples when the video's 9fps timeline advances a frame
         local VIDEO_SRC_FPS = 9
-        local frame_idx = math.floor(ab.video:tell() * VIDEO_SRC_FPS)
+        local ok_tell, pos = pcall(function() return ab.video:tell() end)
+        if not ok_tell then return end
+        local frame_idx = math.floor(pos * VIDEO_SRC_FPS)
         if ab.video_last_frame_idx ~= frame_idx then
             ab.video_last_frame_idx = frame_idx
             love.graphics.push('all')

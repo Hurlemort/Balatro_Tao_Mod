@@ -704,8 +704,9 @@ function SANS.hooks.Update(dt)
                         heart.slammed = false
                         if alongSpeed > 330 then
                             SANS.PlaySound("Slam", 1)
-                            if SANS.slam.damageEnabled then
-                                SANS.DamagePlayer(1) -- plays PlayerDamaged itself; can bring HP to 0 and kill, same as any other direct hit
+                            -- slams wear you down to 1 hp but never kill
+                            if SANS.slam.damageEnabled and SANS.player.hp > 1 then
+                                SANS.DamagePlayer(1)
                             else
                                 SANS.PlaySound("PlayerDamaged", 1)
                             end
@@ -1013,7 +1014,7 @@ function SANS.hooks.Keypressed(key, scancode, isrepeat)
     if scancode == "l" and not isrepeat then
         -- playtest invincibility so you can watch a full runthrough without dying partway
         SANS.invincible = not SANS.invincible
-        print("Invincibility " .. (SANS.invincible and "ON" or "OFF"))
+        print("[TAO][SANS][CHEAT] Manual invicibility : " .. (SANS.invincible and "ON" or "OFF"))
     end
 
     -- a dialogue bubble owns Enter and swallows every other key too, so menu nav can't sneak through underneath it

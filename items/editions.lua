@@ -49,7 +49,6 @@ SMODS.Edition({
             local amount = base ^ n
             return {
                 mult = amount,
-                message = localize({ type = 'variable', key = 'a_mult', vars = { amount } }),
             }
         end
         if context.joker_main then

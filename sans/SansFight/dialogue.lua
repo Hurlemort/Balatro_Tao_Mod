@@ -127,7 +127,6 @@ SANS.dialogue.blocks = {
         { text = "...", pose = { head = "Default", torso = "Default" } },
         { text = "listen.", pose = { head = "ClosedEyes", torso = "Default" } },
         { text = "i know you didn't\nanswer me before,\nbut...", pose = { head = "ClosedEyes", torso = "Default" } },
-        -- no mercy-route line here yet, we don't track spare attempts
         { text = "somewhere in\nthere.\ni can feel it.", pose = { head = "ClosedEyes", torso = "Default" } },
         { text = "there's a glimmer\nof a good person\ninside of you.", pose = { head = "Default", torso = "Default" } },
         { text = "the memory of\nsomeone who once\nwanted to do the\nright thing.", pose = { head = "ClosedEyes", torso = "Default" } },
@@ -322,7 +321,7 @@ function SANS.dialogue.StartIntroDialogue()
     end)
 end
 
--- Spare ending: dialogue.spareEnding -> spare_ending.ogv -> 3-page textbox -> fade to black -> parable_ending.ogv (full native res, bypasses our canvas)
+-- Spare ending: dialogue.spareEnding -> spare_disbelief_papyrus.ogv -> 3-page textbox -> fade to black -> parable_ending.ogv (full native res, bypasses our canvas)
 SANS.spareSequence = SANS.spareSequence or { active = false, phase = nil, video = nil }
 
 -- each page = table of paragraphs, plain "\n" is just wrap-continuation, new table element = new paragraph (see BuildPageDisplay)
@@ -413,7 +412,7 @@ function SANS.StartSpareSequence()
     SANS.dialogue.Play(SANS.dialogue.blocks.spareEnding, function()
         SANS.spareSequence.phase = "video"
 
-        local ok, result = LoadOgvFromResource("spare_ending.ogv")
+        local ok, result = LoadOgvFromResource("spare_disbelief_papyrus.ogv")
         if ok then
             SANS.spareSequence.video = result
             result:play()
@@ -589,8 +588,7 @@ end
 -- Win sequence: fade to white -> 3-page text -> fade to black -> fight_ending.ogv looping w/ spaceship.ogg, Enter after 1 loop calls WinFight
 SANS.winSequence = SANS.winSequence or { active = false, phase = nil, video = nil, loops = 0 }
 
--- same paragraph-array convention as the spare ending's textPages above (each table element is a paragraph, a plain
--- "\n" inside one is just a word-wrap continuation line)
+-- same paragraph-array convention as the spare ending's textPages above (each table element is a paragraph, a plain "\n" inside one is just a word-wrap continuation line)
 SANS.winSequence.textPages = {
     { "Dont worry, you beat him.", "No dirty tricks from now one." },
     { "Here,", "Relax a little before you\nstart Balatroing again." },
@@ -600,7 +598,7 @@ for _, page in ipairs(SANS.winSequence.textPages) do
     BuildPageDisplay(page)
 end
 
-local WIN_FADE_TIME = 0.6 -- not a source value, matches SPARE_FADE_TIME's guess
+local WIN_FADE_TIME = 0.6 -- matches SPARE_FADE_TIME's
 
 function SANS.StartWinSequence()
     if SANS.winSequence.active then return end

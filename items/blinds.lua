@@ -59,24 +59,24 @@ SMODS.Blind {
     end
 }
 
-SMODS.Blind {
-    name = "boss_rainbow",
-    key = "boss_rainbow",
-    atlas = "blinds",
-    pos = { x = 0, y = 1 },
-    dollars = 6,
-    mult = 3,
-    discovered = true,
-    loc_txt = {
-        name = 'The Rainbow',
-        text = {
-            "Each click changes",
-            "the game's language",
-        }
-    },
-    boss = { min = 0 },
-    boss_colour = HEX('de4e5c'),
-}
+-- SMODS.Blind {
+--     name = "boss_rainbow",
+--     key = "boss_rainbow",
+--     atlas = "blinds",
+--     pos = { x = 0, y = 1 },
+--     dollars = 6,
+--     mult = 3,
+--     discovered = true,
+--     loc_txt = {
+--         name = 'The Rainbow',
+--         text = {
+--             "Each click changes",
+--             "the game's language",
+--         }
+--     },
+--     boss = { min = 0 },
+--     boss_colour = HEX('de4e5c'),
+-- }
 
 SMODS.Blind {
     name = "boss_bestspark",
@@ -98,9 +98,10 @@ SMODS.Blind {
 
     calculate = function(self, blind, context)
         if context.after and not G.GAME.blind.disabled then
-            local hand_chips = G.GAME.current_round.current_hand.chips or 0
-            local hand_mult = G.GAME.current_round.current_hand.mult or 0
-            local projected_total = G.GAME.chips + math.floor(hand_chips * hand_mult)
+            -- current_hand.chips/mult are still the previous hand's here (update_hand_text defers),
+            -- so the live scoring parameters are what actually hold this hand's score
+            local hand_score = SMODS.calculate_round_score and SMODS.calculate_round_score() or 0
+            local projected_total = G.GAME.chips + math.floor(hand_score)
             if projected_total >= G.GAME.blind.chips then
                 G.GAME.blind.triggered = true
                 for i = #G.play.cards, 1, -1 do
@@ -110,7 +111,7 @@ SMODS.Blind {
                         -- shares the dissolve's event so both fire together
                         G.E_MANAGER:add_event(Event({
                             func = function()
-                                play_effect("explosion", playing_card.tilt_var.mx, playing_card.tilt_var.my)
+                                play_effect("explosion", Tao.funcs.card_screen_pos(playing_card))
                                 playing_card:start_dissolve()
                                 return true
                             end
@@ -122,7 +123,7 @@ SMODS.Blind {
     end
 }
 
--- actual effect in state_events.lua patch (patches.toml) + debuff_hand below on failure
+-- effect lives in the state_events.lua patch (patches.toml) + debuff_hand below on failure
 SMODS.Blind {
     name = "boss_math",
     key = "boss_math",
@@ -755,4 +756,57 @@ function Tao.funcs.update_dvd_blind(dt)
     for _, b in ipairs(buttons) do
         Tao.funcs.dvd_apply_position(b.elem)
     end
+end
+SMODS.Atlas{
+    key = 'sans_anim_atlas',
+    path = 'blind_sans.png',
+    px = 34,
+    py = 34,
+    atlas_table = 'ANIMATION_ATLAS',
+    frames = 42,
+}
+
+-- key is read back off the object because SMODS prefixes it to "bl_tao_sans"
+local SansBlind = SMODS.Blind{
+    key = 'sans',
+    atlas = 'sans_anim_atlas',
+    pos = {x = 0, y = 0},
+    dollars = 100,
+    discovered = true,
+    boss = { min = 0 },
+    boss_colour = HEX('000000'),
+    flat_chips = 1, -- you beat sans by fighting him, not by scoring
+    loc_txt = {
+        name = 'Sans',
+        text = {
+            "The easiest",
+            "blind"
+        }
+    },
+}
+
+-- freezes only once set_blind fires for real, so G.STATE is settled by the time sans takes over
+local sans_blind_set_blind = Blind.set_blind
+function Blind:set_blind(blind, reset, silent)
+    sans_blind_set_blind(self, blind, reset, silent)
+
+    if blind and blind.flat_chips and not reset then
+        self.chips = blind.flat_chips
+        self.chip_text = number_format(self.chips)
+        if G.HUD_blind then G.HUD_blind:recalculate(false) end
+    end
+
+    if blind and blind.key == SansBlind.key and not reset and not SANS.state then
+        SANS.StartIntroAnim()
+    end
+end
+
+-- suppresses the one stale post-freeze hand draw
+local sans_draw_from_deck_to_hand = G.FUNCS.draw_from_deck_to_hand
+G.FUNCS.draw_from_deck_to_hand = function(e)
+    if SANS.suppressNextHandDraw then
+        SANS.suppressNextHandDraw = false
+        e = 0
+    end
+    return sans_draw_from_deck_to_hand(e)
 end

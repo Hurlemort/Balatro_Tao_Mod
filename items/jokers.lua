@@ -250,7 +250,6 @@ SMODS.Joker{
             return
                 {
                 chips = card.ability.extra.chips,
-                message = rand .. "/20",
                 colour = rand_color
                 }
         end
@@ -297,7 +296,6 @@ SMODS.Joker{
         if context.joker_main and context.cardarea == G.jokers and (card.ability.extra.mult > 0) then
             return {
                 mult = card.ability.extra.mult,
-                message = "I'm so sorry about your brother that passed away..."
             }
         end
     end
@@ -330,34 +328,35 @@ SMODS.Joker{
         return nil
     end,
 
+    -- fires once the hand has finished scoring, so the modifier lands for the next hand
     calculate = function(self, card, context)
-        if context.individual and context.cardarea == G.play then
-            if context.other_card == context.scoring_hand[#context.scoring_hand] then
-                local card = context.other_card
+        if context.after and context.cardarea == G.jokers and context.scoring_hand then
+            local target = context.scoring_hand[#context.scoring_hand]
+            if not target then return end
 
-                local modifier_type = math.floor(pseudorandom("calliste") * 3)
+            local modifier_type = math.floor(pseudorandom("calliste") * 3)
 
-                if modifier_type == 0 then
-                    local enhancement = pseudorandom_element(G.P_CENTER_POOLS["Enhanced"], pseudoseed("calliste")).key
-                    while G.P_CENTERS[enhancement].no_doe or G.GAME.banned_keys[enhancement] do
-                        enhancement = pseudorandom_element(G.P_CENTER_POOLS["Enhanced"], pseudoseed("calliste")).key
-                    end
-                    card:set_ability(G.P_CENTERS[enhancement])
-
-                elseif modifier_type == 1 then
-                    local edition = SMODS.poll_edition({guaranteed = true, key = "calliste"})
-                    card:set_edition(edition)
-
-                elseif modifier_type == 2 then
-                    local seal = SMODS.poll_seal{guaranteed = true, key = "calliste"}
-                    card:set_seal(seal)
+            if modifier_type == 0 then
+                local enhancement = pseudorandom_element(G.P_CENTER_POOLS["Enhanced"], pseudoseed("calliste")).key
+                while G.P_CENTERS[enhancement].no_doe or G.GAME.banned_keys[enhancement] do
+                    enhancement = pseudorandom_element(G.P_CENTER_POOLS["Enhanced"], pseudoseed("calliste")).key
                 end
+                target:set_ability(G.P_CENTERS[enhancement])
 
-                return {
-                    message = localize("k_upgrade_ex"),
-                    colour = G.C.ATTENTION
-                }
+            elseif modifier_type == 1 then
+                local edition = SMODS.poll_edition({guaranteed = true, key = "calliste"})
+                target:set_edition(edition)
+
+            elseif modifier_type == 2 then
+                local seal = SMODS.poll_seal{guaranteed = true, key = "calliste"}
+                target:set_seal(seal)
             end
+
+            return {
+                message = localize("k_upgrade_ex"),
+                colour = G.C.ATTENTION,
+                card = target
+            }
         end
     end
 }
@@ -403,7 +402,6 @@ SMODS.Joker{
         if context.joker_main and context.cardarea == G.jokers then
             return {
                 xmult = card.ability.extra.xmult,
-                message = localize({ type = "variable", key = "a_xmult", vars = { card.ability.extra.xmult } }),
             }
         end
     end
@@ -661,7 +659,7 @@ SMODS.Joker{
     },
 
     loc_vars = function(self, info_queue, card)
-        return { vars = {"Diamond", colours = {G.C.SUITS.Diamonds}}}
+        return { vars = { localize('Diamonds', 'suits_plural'), colours = { G.C.SUITS.Diamonds } } }
     end,
 
     calculate = function(self, card, context)
@@ -761,6 +759,58 @@ SMODS.Joker{
     end,
 }
 
+-- FINISHED
+SMODS.Joker{
+    key = "D6",
+    config = {},
+    pos = { x = 7, y = 3 },
+    soul_pos = nil,
+    rarity = 1,
+    cost = 6,
+    blueprint_compat = true,
+    eternal_compat = true,
+    perishable_compat = true,
+    unlocked = true,
+    discovered = true,
+    effect = nil,
+    atlas = 'jokers',
+    pools = {["tao_joker_pool"] = true, ["tao_joker_pool_legendary"] = true},
+
+    loc_txt= {
+        name = 'D6',
+        text = {"Creates a {C:tarot}Dice Shard{}",
+                "at the end of the round",
+                "{C:inactive}(Must have room)"}
+    },
+
+    loc_vars = function(self, info_queue, card)
+        info_queue[#info_queue + 1] = G.P_CENTERS.c_tao_dice_shard
+    end,
+
+    calculate = function(self, card, context)
+        if context.end_of_round and context.cardarea == G.jokers then
+            if #G.consumeables.cards + G.GAME.consumeable_buffer >= G.consumeables.config.card_limit then
+                return { message = localize('k_no_room_ex'), colour = G.C.RED }
+            end
+            G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
+            G.E_MANAGER:add_event(Event({
+                trigger = 'before',
+                delay = 0.0,
+                func = function()
+                    local shard = create_card(nil, G.consumeables, nil, nil, nil, nil, 'c_tao_dice_shard', 'D6')
+                    shard:add_to_deck()
+                    G.consumeables:emplace(shard)
+                    G.GAME.consumeable_buffer = 0
+                    return true
+                end
+            }))
+            return {
+                message = "Dice Shard!",
+                colour = G.C.SECONDARY_SET.Tarot,
+            }
+        end
+    end
+}
 -- FINISHED, Creates a tarot card if 2 or more face cards are scored in one hand
 SMODS.Joker{
     key = "victor",
@@ -947,7 +997,7 @@ SMODS.Joker{
         text = {
             "Retriggers {C:attention}#1#{} times planet cards,",
             "{C:chips}Planet{} cards and {C:chips}Celestial Packs{}",
-            "cost {C:attention}#2#{} more",
+            "cost {C:attention}X#2#{} more",
             "{C:inactive,s:0.7}Thanks to seacap54 for the code :){}"}
     },
 
@@ -1018,7 +1068,6 @@ SMODS.Joker{
                 card.ability.extra.xmult = card.ability.extra.xmult + card.ability.extra.mod_xmult
                 return {
                     xmult = card.ability.extra.xmult,
-                    message = localize({ type = "variable", key = "a_xmult", vars = { card.ability.extra.xmult } }),
                 }
             elseif not _trigger and card.ability.extra.xmult > 1 then
                 card.ability.extra.xmult = 1
@@ -1078,7 +1127,6 @@ SMODS.Joker{
             return{
                 card = card,
                 xmult = card.ability.extra.xmult,
-                message = localize({ type = "variable", key = "a_xmult", vars = { card.ability.extra.xmult } }),
             }
         end
     end         
@@ -1184,7 +1232,6 @@ SMODS.Joker{
         if context.joker_main and context.cardarea == G.jokers and (card.ability.extra.xmult>1) then
             return {
                 xmult = card.ability.extra.xmult,
-                message = localize({ type = "variable", key = "a_xmult", vars = { card.ability.extra.xmult } }),
             }
         end
         if context.end_of_round and (G.GAME.blind:get_type() == 'Boss') and (context.cardarea == G.jokers) then
@@ -1526,58 +1573,6 @@ SMODS.Joker{
 }
 -- FINISHED
 SMODS.Joker{
-    key = "D6",
-    config = {},
-    pos = { x = 7, y = 3 },
-    soul_pos = nil,
-    rarity = 2,
-    cost = 6,
-    blueprint_compat = true,
-    eternal_compat = true,
-    perishable_compat = true,
-    unlocked = true,
-    discovered = true,
-    effect = nil,
-    atlas = 'jokers',
-    pools = {["tao_joker_pool"] = true, ["tao_joker_pool_legendary"] = true},
-
-    loc_txt= {
-        name = 'D6',
-        text = {"Creates a {C:tarot}Dice Shard{}",
-                "at the end of the round",
-                "{C:inactive}(Must have room)"}
-    },
-
-    loc_vars = function(self, info_queue, card)
-        info_queue[#info_queue + 1] = G.P_CENTERS.c_tao_dice_shard
-    end,
-
-    calculate = function(self, card, context)
-        if context.end_of_round and context.cardarea == G.jokers then
-            if #G.consumeables.cards + G.GAME.consumeable_buffer >= G.consumeables.config.card_limit then
-                return { message = localize('k_no_room_ex'), colour = G.C.RED }
-            end
-            G.GAME.consumeable_buffer = G.GAME.consumeable_buffer + 1
-            G.E_MANAGER:add_event(Event({
-                trigger = 'before',
-                delay = 0.0,
-                func = function()
-                    local shard = create_card(nil, G.consumeables, nil, nil, nil, nil, 'c_tao_dice_shard', 'D6')
-                    shard:add_to_deck()
-                    G.consumeables:emplace(shard)
-                    G.GAME.consumeable_buffer = 0
-                    return true
-                end
-            }))
-            return {
-                message = "Dice Shard!",
-                colour = G.C.SECONDARY_SET.Tarot,
-            }
-        end
-    end
-}
--- FINISHED
-SMODS.Joker{
     key = "ED6",
     config = {},
     pos = { x = 8, y = 3 },
@@ -1668,6 +1663,12 @@ SMODS.Joker{
                 xmult = card.ability.extra.xmult,
             }
         end
+    end,
+
+    -- the video is rebuilt from frame 0 on reload, so ask it to seek to the saved watch time
+    load = function(self, card, card_table, other_card)
+        local ab = Tao.assets.angry_birds
+        ab.seek_to = math.max(ab.seek_to or 0, card.ability.extra.watched or 0)
     end
 }
 -- FINISHED
@@ -1898,17 +1899,19 @@ SMODS.Joker{
 
     loc_txt= {
         name = 'Holy Six',
-        text = {"Each scored {C:attention}6{}",
-                "give {X:mult,C:white}X#1#{} Mult",}
+        text = {"Each scored {C:attention}6{} of {V:1}#2#{}",
+                "gives {X:mult,C:white}X#1#{} Mult",}
     },
 
     loc_vars = function(self, info_queue, card)
-        return { vars = {card.ability.extra.xmult} }
+        return { vars = { card.ability.extra.xmult, localize('Diamonds', 'suits_plural'), colours = { G.C.SUITS.Diamonds } } }
     end,
 
     calculate = function(self, card, context)
         if context.individual and context.cardarea == G.play then
-            if Tao.funcs.is_it_a_six(context.other_card) and not context.other_card.debuffed then
+            if Tao.funcs.is_it_a_six(context.other_card)
+                and context.other_card:is_suit('Diamonds')
+                and not context.other_card.debuffed then
                 return {
                     xmult = card.ability.extra.xmult
                 }
@@ -2095,7 +2098,6 @@ SMODS.Joker{
         if context.joker_main and context.cardarea == G.jokers and (card.ability.extra.xmult>1)  then
             return {
 				xmult = card.ability.extra.xmult,
-                message = localize({ type = "variable", key = "a_xmult", vars = { card.ability.extra.xmult } }),
             }
         end
     end

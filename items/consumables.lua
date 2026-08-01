@@ -413,6 +413,31 @@ SMODS.Consumable{
         local rarity = target.config.center.rarity
         local target_rarity = math.min(rarity + 1, 4)
 
+        -- destroy and reroll are exclusive: a proc destroys the joker instead of upgrading it
+        if pseudorandom('eternal_dice_shard_destroy') < G.GAME.probabilities.normal / card.ability.extra.odds then
+            if not SMODS.is_eternal(target) then
+                G.E_MANAGER:add_event(Event({
+                    trigger = 'after',
+                    delay = 0.1,
+                    func = function()
+                        target:juice_up(0.8, 0.8)
+                        card_eval_status_text(
+                            target, 'extra', nil, nil, nil,
+                            { message = "Destroyed", colour = G.C.MULT }
+                        )
+                        return true
+                    end
+                }))
+                G.E_MANAGER:add_event(Event({
+                    func = function()
+                        target:start_dissolve()
+                        return true
+                    end
+                }))
+            end
+            return true
+        end
+
         -- flip -> reroll hidden -> flip back; 0.1s/step so it still finishes if used from a pack
         G.E_MANAGER:add_event(Event({
             trigger = 'after',
@@ -444,29 +469,6 @@ SMODS.Consumable{
                     target, 'extra', nil, nil, nil,
                     { message = localize("k_upgrade_ex"), colour = G.C.SECONDARY_SET.Spectral }
                 )
-                return true
-            end
-        }))
-
-        -- queued after the 3 above, so this delay only covers its own turn
-        G.E_MANAGER:add_event(Event({
-            trigger = 'after',
-            delay = 0.1,
-            func = function()
-                local destroyed = pseudorandom('eternal_dice_shard_destroy') < G.GAME.probabilities.normal / card.ability.extra.odds
-                if destroyed and not SMODS.is_eternal(target) then
-                    target:juice_up(0.8, 0.8)
-                    card_eval_status_text(
-                        target, 'extra', nil, nil, nil,
-                        { message = "Destroyed", colour = G.C.MULT }
-                    )
-                    G.E_MANAGER:add_event(Event({
-                        func = function()
-                            target:start_dissolve()
-                            return true
-                        end
-                    }))
-                end
                 return true
             end
         }))
@@ -545,5 +547,82 @@ SMODS.Consumable{
         end
         if n ~= 1 then return false end
         return target.seal ~= nil or target.edition ~= nil or target.config.center.key ~= 'c_base'
+    end,
+}
+
+SMODS.Consumable{
+    key = "cult",
+    set = "Tarot",
+    object_type = "Consumable",
+    name = "cult",
+    pos = {x = 0, y = 3},
+    atlas = "consumables",
+    unlocked = true,
+    discovered = true,
+    cost = 4,
+    config = { max_highlighted = 2 },
+
+    loc_txt = {
+        name = "Cult",
+        text = {
+            "Converts up to",
+            "{C:attention}#1#{} selected cards",
+            "to a {V:1}6 of #2#{}",
+        },
+    },
+
+    loc_vars = function(self, info_queue, card)
+        local cfg = (card and card.ability and card.ability.consumeable) or self.config
+        return { vars = { cfg.max_highlighted, localize('Diamonds', 'suits_plural'), colours = { G.C.SUITS.Diamonds } } }
+    end,
+
+    -- same beat as vanilla suit-conversion tarots: flip down, change, flip back, then a beat to look at it
+    use = function(self, card, area, copier)
+        local targets = {}
+        for _, v in ipairs(G.hand.highlighted) do targets[#targets + 1] = v end
+        if not targets[1] then return end
+
+        G.E_MANAGER:add_event(Event({ trigger = 'after', delay = 0.4, func = function()
+            play_sound('tarot1')
+            card:juice_up(0.3, 0.5)
+            return true
+        end }))
+
+        for i = 1, #targets do
+            local percent = 1.15 - (i - 0.999) / (#targets - 0.998) * 0.3
+            G.E_MANAGER:add_event(Event({ trigger = 'after', delay = 0.15, func = function()
+                targets[i]:flip(); play_sound('card1', percent); targets[i]:juice_up(0.3, 0.3)
+                return true
+            end }))
+        end
+        delay(0.2)
+
+        for i = 1, #targets do
+            G.E_MANAGER:add_event(Event({ trigger = 'after', delay = 0.1, func = function()
+                assert(SMODS.change_base(targets[i], 'Diamonds', '6'))
+                return true
+            end }))
+        end
+
+        for i = 1, #targets do
+            local percent = 0.85 + (i - 0.999) / (#targets - 0.998) * 0.3
+            G.E_MANAGER:add_event(Event({ trigger = 'after', delay = 0.15, func = function()
+                targets[i]:flip(); play_sound('tarot2', percent, 0.6); targets[i]:juice_up(0.3, 0.3)
+                return true
+            end }))
+        end
+
+        -- hold on the result so it's readable when used from inside a booster pack
+        G.E_MANAGER:add_event(Event({ trigger = 'after', delay = 0.1, func = function()
+            G.hand:unhighlight_all()
+            return true
+        end }))
+        delay(0.5)
+    end,
+
+    can_use = function(self, card)
+        if not (G.hand and G.hand.highlighted) then return false end
+        local n = #G.hand.highlighted
+        return n >= 1 and n <= card.ability.consumeable.max_highlighted
     end,
 }
