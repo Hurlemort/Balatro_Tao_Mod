@@ -2112,9 +2112,11 @@ SMODS.Joker{
     soul_pos = {
         x = 1, y = 4,
         draw = function(card, scale_mod, rotate_mod)
+            local soul, centre = card.children.floating_sprite, card.children.center
+            if not (soul and centre) then return end
             local scaled_mod = (1 + scale_mod) * 0.75 - 1
-            card.children.floating_sprite:draw_shader('dissolve', 0, nil, nil, card.children.center, scaled_mod, rotate_mod, nil, 0.1 + 0.03*math.sin(1.8*G.TIMERS.REAL), nil, 0.6)
-            card.children.floating_sprite:draw_shader('dissolve', nil, nil, nil, card.children.center, scaled_mod, rotate_mod)
+            soul:draw_shader('dissolve', 0, nil, nil, centre, scaled_mod, rotate_mod, nil, 0.1 + 0.03*math.sin(1.8*G.TIMERS.REAL), nil, 0.6)
+            soul:draw_shader('dissolve', nil, nil, nil, centre, scaled_mod, rotate_mod)
         end
     },
     rarity = 4,
