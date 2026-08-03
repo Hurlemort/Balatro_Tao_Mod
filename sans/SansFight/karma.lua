@@ -296,11 +296,11 @@ function SANS.EndHeartDeath()
     end
 end
 
--- beats the boss blind outright - forces G.STATE to HAND_PLAYED before end_round(), same trick as DebugPlus's win cheat
+-- beats the boss blind outright; forces G.STATE to HAND_PLAYED before end_round(), same trick as DebugPlus's win cheat
 function SANS.WinFight()
     if not (G.GAME and G.GAME.blind) then return end
 
-    SANS.state = false -- hand control back unconditionally (no toggle - a toggle could flip the wrong way and restart the fight)
+    SANS.state = false -- hand control back unconditionally (no toggle; a toggle could flip the wrong way and restart the fight)
     SANS.StopMusic()
 
     G.GAME.chips = G.GAME.blind.chips

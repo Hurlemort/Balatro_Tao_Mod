@@ -7,7 +7,7 @@ local T_FLASH1 = 0.64
 local T_FLASH2 = T_FLASH1 + 0.14
 local T_FLASH3 = T_FLASH2 + 0.14
 local T_BATTLE = T_FLASH3 + 0.07
-local BATTLE_DURATION = 0.5 -- total time from Battle.ogg to BeginFight - lengthened 2026-07-22 per user request (was 0.325)
+local BATTLE_DURATION = 0.5 -- total time from Battle.ogg to BeginFight; lengthened 2026-07-22 per user request (was 0.325)
 local HEART_ARRIVE_TIME = 0.5 -- heart reaches the FIGHTUI snap position this long after the slide starts, constant speed, then holds there for the rest of BATTLE_DURATION
 local T_END = T_BATTLE + BATTLE_DURATION
 
@@ -15,12 +15,12 @@ local HEART_BLIP_TIME = 0.05
 
 -- measured directly off a screenshot of the blind-select card icon (pixel bounding-box analysis)
 local CHIP_POS = { x = 515, y = 243 }
-local CHIP_SCALE = 2 -- kept as a clean integer per explicit request - a fractional scale (was 1.44) stretches pixels unevenly
+local CHIP_SCALE = 2 -- kept as a clean integer per explicit request; a fractional scale (was 1.44) stretches pixels unevenly
 local CHIP_FRAME_SIZE = 34
 
 local function GetChipTexture()
     if not SANS.introAnim.chipTexture then
-        -- blind_sans.png's atlas is registered at the Tao mod ROOT (items/blinds.lua), not under sans/ - use Tao.path, not SANS.path
+        -- blind_sans.png's atlas is registered at the Tao mod ROOT (items/blinds.lua), not under sans/; use Tao.path, not SANS.path
         local base = Tao.path or ""
         local last = base:sub(-1)
         if last ~= "/" and last ~= "\\" then base = base .. "/" end
@@ -40,7 +40,7 @@ end
 function SANS.StartIntroAnim()
     if SANS.introAnim.active or SANS.state then return end
 
-    SANS.state = true -- freezes the real game immediately (Game.update stops running, see globals.lua) - we own the screen from here on
+    SANS.state = true -- freezes the real game immediately (Game.update stops running, see globals.lua); we own the screen from here on
     SANS.suppressNextHandDraw = true -- new_round()'s stale draw-to-hand call gets suppressed once it fires, see hooks.lua
     love.thread.getChannel("sound_request"):push({ type = "stop" }) -- stop Balatro's music now too, not just at BeginFight
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
@@ -106,7 +106,7 @@ function SANS.UpdateIntroAnim(dt)
         SANS.PlaySound("Battle", 1)
         a.slideFromX, a.slideFromY = heart.x, heart.y
         -- the heart's actual resting spot on the UIFight icon, NOT SnapHeart(0,0) (that's the unrelated "* Sans"/"* Check"/
-        -- "* Spare" substate text position) - from menu.lua's LoadUI (UIFight at {28,437}) + UpdateHighlight(1)'s {+25,+13}
+        -- "* Spare" substate text position); from menu.lua's LoadUI (UIFight at {28,437}) + UpdateHighlight(1)'s {+25,+13}
         a.slideToX, a.slideToY = 53, 450
     end
 

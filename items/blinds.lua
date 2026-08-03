@@ -450,7 +450,7 @@ Tao.screen_effects.boss_record = {
         love.graphics.pop()
     end,
 
-    -- inverse of draw()'s transform - rotates a raw screen point by -angle around center
+    -- inverse of draw()'s transform; rotates a raw screen point by -angle around center
     remap_point = function(x, y)
         local angle = (G.TIMERS and G.TIMERS.REAL or 0) * RECORD_RAD_PER_SEC
         local cx, cy = love.graphics.getWidth()/2, love.graphics.getHeight()/2

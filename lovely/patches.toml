@@ -71,7 +71,7 @@ lagrange = { rank = "Ace", suit = "Spades", id = 14, triggers = 0},
 '''
 match_indent = true
 
-# Record/Puzzle screen effects moved to real SMODS.ScreenShader entries (items/blinds.lua) - no more unconditional per-frame canvas patch here
+# Record/Puzzle screen effects moved to real SMODS.ScreenShader entries (items/blinds.lua); no more unconditional per-frame canvas patch here
 
 # remaps cursor hit-testing (G.CURSOR.T/VT) to match the active screen effect's distortion
 [[patches]]

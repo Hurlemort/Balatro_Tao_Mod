@@ -581,7 +581,7 @@ SMODS.Joker{
         return { vars = { card.ability.extra.chip_mult } }
     end,
 
-    -- fires once per new blind, after blind.chips is rolled - multiplying it here is the whole effect
+    -- fires once per new blind, after blind.chips is rolled; multiplying it here is the whole effect
     calculate = function(self, card, context)
         if context.setting_blind then
             G.GAME.blind.chips = math.floor(G.GAME.blind.chips * card.ability.extra.chip_mult)
@@ -674,7 +674,7 @@ SMODS.Joker{
         end
     end,
 }
--- FINISHED - counter lives on ability table, so it survives hands/rounds/blinds/antes
+-- FINISHED; counter lives on ability table, so it survives hands/rounds/blinds/antes
 SMODS.Joker{
     key = "Six Fingers",
     config = { extra = { count = 0, interval = 6 } },
@@ -725,7 +725,7 @@ SMODS.Joker{
     end
 }
 
--- FINISHED - passive: Saliva's mult base is read from here via Tao.funcs.saliva_base()
+-- FINISHED; passive: Saliva's mult base is read from here via Tao.funcs.saliva_base()
 SMODS.Joker{
     key = "oliveoil",
     config = { extra = { alt_base = 3 } },
@@ -1820,7 +1820,7 @@ SMODS.Joker{
         end
     end
 }
--- FINISHED - raises Mult via SMODS.Scoring_Parameters.mult (technique from Cryptid)
+-- FINISHED; raises Mult via SMODS.Scoring_Parameters.mult (technique from Cryptid)
 SMODS.Joker{
     key = "Terence",
     config = { extra = { mult_exp = 1.5, hands = 1 } },
@@ -2112,11 +2112,11 @@ SMODS.Joker{
     soul_pos = {
         x = 1, y = 4,
         draw = function(card, scale_mod, rotate_mod)
-            local soul, centre = card.children.floating_sprite, card.children.center
-            if not (soul and centre) then return end
+            local soul, center = card.children.floating_sprite, card.children.center
+            if not (soul and center) then return end
             local scaled_mod = (1 + scale_mod) * 0.75 - 1
-            soul:draw_shader('dissolve', 0, nil, nil, centre, scaled_mod, rotate_mod, nil, 0.1 + 0.03*math.sin(1.8*G.TIMERS.REAL), nil, 0.6)
-            soul:draw_shader('dissolve', nil, nil, nil, centre, scaled_mod, rotate_mod)
+            soul:draw_shader('dissolve', 0, nil, nil, center, scaled_mod, rotate_mod, nil, 0.1 + 0.03*math.sin(1.8*G.TIMERS.REAL), nil, 0.6)
+            soul:draw_shader('dissolve', nil, nil, nil, center, scaled_mod, rotate_mod)
         end
     },
     rarity = 4,

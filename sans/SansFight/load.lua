@@ -72,7 +72,7 @@ function SANS.LoadFont(fontname, firstChar, lastChar)
     end
 end
 
--- loads an image to the framebuffer, fresh decode every call, no caching - tried caching once and it broke real rendering, not worth it
+-- loads an image to the framebuffer, fresh decode every call, no caching; tried caching once and it broke real rendering, not worth it
 function SANS.LoadImage(name, x, y, rotation, scaleX, scaleY, isAttack, color)
     rotation = rotation or 0
     scaleX = scaleX or 1

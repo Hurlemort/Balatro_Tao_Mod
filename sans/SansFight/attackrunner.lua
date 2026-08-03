@@ -107,7 +107,7 @@ function SANS.attackrunner.StartAttack(name)
 
     -- clean slate before this attack's own instructions run
     SANS.attackloader.ResetVars()
-    SANS.MenuBonesOff() -- see menu.lua's MenuBones section - mirrors the source's "Call ResetVars, Call MenuBonesOff" pairing at StartAttack
+    SANS.MenuBonesOff() -- see menu.lua's MenuBones section; mirrors the source's "Call ResetVars, Call MenuBonesOff" pairing at StartAttack
 
     if not name then
         print("[SANS][ATTACK] StartAttack called without an attack name")

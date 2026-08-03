@@ -5,7 +5,7 @@ SMODS.Atlas{
     py = 95
 }
 
--- raw weights, not percentages - poll_rarity normalises by their total (vanilla: .7/.25/.05/0)
+-- raw weights, not percentages; poll_rarity normalises by their total (vanilla: .7/.25/.05/0)
 LOST_DECK_RARITY_WEIGHTS = {
     Common    = 0.7,
     Uncommon  = 0.25,

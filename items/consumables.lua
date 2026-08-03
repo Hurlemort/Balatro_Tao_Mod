@@ -555,7 +555,7 @@ SMODS.Consumable{
     set = "Tarot",
     object_type = "Consumable",
     name = "cult",
-    pos = {x = 0, y = 3},
+    pos = {x = 3, y = 0},   
     atlas = "consumables",
     unlocked = true,
     discovered = true,

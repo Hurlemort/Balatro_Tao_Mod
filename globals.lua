@@ -3,7 +3,7 @@
 ------------------------------------------------------------
 -- Screen Effects Registry
 ------------------------------------------------------------
--- entry needs is_active(), draw(canvas), remap_point(x,y) - see blinds.lua
+-- entry needs is_active(), draw(canvas), remap_point(x,y); see blinds.lua
 Tao.screen_effects = Tao.screen_effects or {}
 
 function Tao.funcs.get_active_screen_effect()
@@ -82,7 +82,7 @@ function Tao.funcs.get_id(card, area)
     end
 end
 
--- true 6, or Oops! owned - use instead of get_id()==6
+-- true 6, or Oops! owned; use instead of get_id()==6
 function Tao.funcs.is_it_a_six(card)
     if card:get_id() == 6 or #SMODS.find_card("j_tao_oops") > 0 then
         return true
@@ -614,8 +614,9 @@ end
 
 local abm_sprite_remove = Sprite.remove
 function Sprite:remove()
-    if self.video and self.video == Tao.assets.angry_birds.video then
+    if self.tao_shared_video then
         self.video = nil
+        self.tao_shared_video = nil
     end
     abm_sprite_remove(self)
 end
@@ -686,6 +687,7 @@ function Tao.funcs.update_angry_birds(dt)
                         local video = tao_angry_birds_video()
                         if video then
                             card.children.center.video = video
+                            card.children.center.tao_shared_video = true
                         end
                     end
                 end
@@ -718,6 +720,7 @@ function Tao.funcs.update_angry_birds(dt)
                     ab.started = true
                 elseif ab.started then
                     ab.finished = true
+                    check_for_unlock({ type = "ach_tao_angry_birds_movie" })
                     pcall(function()
                         ab.video:rewind()
                         ab.video:play()

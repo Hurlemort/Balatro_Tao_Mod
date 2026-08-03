@@ -28,14 +28,13 @@ local function GetSoundData(name)
     return SANS.sound.dataCache[name]
 end
 
--- all one-shot SFX get quieted down to this, no exceptions (SansSpeak included) - music (SANS.PlayMusic) has its own separate playback path, untouched
+-- all one-shot SFX get quieted down to this, no exceptions (SansSpeak included); music (SANS.PlayMusic) has its own separate playback path, untouched
 SANS.SFX_VOLUME = 0.5
 
--- only suppresses truly-simultaneous same-tick starts of a sound (e.g. 4 GasterBlasters at once) - reset every tick
+-- only suppresses truly-simultaneous same-tick starts of a sound (e.g. 4 GasterBlasters at once); reset every tick
 SANS.sound.playedThisTick = SANS.sound.playedThisTick or {}
 
--- Plays a named sound. Optional volumeMult (0-1) scales SANS.SFX_VOLUME down further for this one play, e.g. the
--- spare ending's "NO WAIT THAT'S THE WRONG ONE" text getting quieter as the screen fades to black (dialogue.lua).
+-- Plays a named sound; optional volumeMult (0-1) scales SANS.SFX_VOLUME down further, e.g. the spare ending's fading dialogue text (dialogue.lua)
 function SANS.PlaySound(name, pitch, volumeMult)
     if SANS.sound.playedThisTick[name] then return end
 
@@ -146,8 +145,8 @@ SANS.blackScreen = false -- covers the whole 640x480 framebuffer in black while 
 SANS.BlueHeart = SANS.BlueHeart or {
     jumpSpeed = 180,      -- in px/s upward speed applied once on the jump keypress
     jumpHoldCutoff = 30,  -- upward speed cap when jump is released
-    maxFallSpeed = 750,   -- in px/s terminal falling speed (only reachable via slams - normal gravity cuts out at 240, see getBlueGravity)
-    jumpBufferTime = 0.1, -- seconds a fresh "up" press is remembered before landing (see UpdateBlueHeartJump) - not a source value, added so precise jump-then-land-then-jump attacks work
+    maxFallSpeed = 750,   -- in px/s terminal falling speed (only reachable via slams; normal gravity cuts out at 240, see getBlueGravity)
+    jumpBufferTime = 0.1, -- seconds a fresh "up" press is remembered before landing (see UpdateBlueHeartJump), not a source value
 }
 
 -- Platform rectangle specs (see attackloader.Platform)
@@ -161,7 +160,7 @@ SANS.PlatformConfig = SANS.PlatformConfig or {
 -- Tint applied to the heart texture per HeartMode
 SANS.HEART_COLORS = {
     [0] = { r = 1, g = 0, b = 0 },      -- red (Battle.xml Tint 100/0/0)
-    [1] = { r = 0, g = 0.2353, b = 1 }, -- blue - #003CFF, the actual Undertale/C2 soul blue (Battle.xml Tint 0/23.53/100), not pure #0000FF
+    [1] = { r = 0, g = 0.2353, b = 1 }, -- blue; #003CFF, the actual Undertale/C2 soul blue (Battle.xml Tint 0/23.53/100), not pure #0000FF
 }
 SANS.player = {max_hp = 92, max_kr = 40, hp = 92, kr = 0}
 
@@ -258,7 +257,7 @@ function SANS.GetImageBBox(img)
     return min_x, min_y, max_x, max_y
 end
 
--- vector from a sprite's pivot to its rotated visual center, since we store pivots but source coords are center-based
+-- vector from a sprite's pivot to its rotated visual center, since pivots are stored but source coords are center-based
 function SANS.GetPivotToCenterOffset(img)
     local w, h = img.img:getWidth(), img.img:getHeight()
     local sx, sy = img.scaleX or 1, img.scaleY or 1
@@ -403,7 +402,7 @@ local function KeyForDirection(x, y)
     else return "up" end
 end
 
--- jumping :DD - vector form so gravity/jump work along whichever axis SansSlam last rotated the heart to
+-- jumping :DD; vector form so gravity/jump work along whichever axis SansSlam last rotated the heart to
 function SANS.UpdateBlueHeartJump(heart, dt)
     local cfg = SANS.BlueHeart
     heart.vx = heart.vx or 0
@@ -473,8 +472,7 @@ function SANS.UpdateHeartColor()
     newHeart.slammed = heart.slammed
 end
 
--- draws text anywhere, "\n" wraps to a new line, optional redRanges (from SANS.ParseColorTags) makes it own its color
--- (black default, whichever tag colour - red/orange/... - in range) instead of inheriting the caller's
+-- draws text anywhere, "\n" wraps; optional redRanges (SANS.ParseColorTags) makes it own its color instead of inheriting the caller's
 function SANS.DrawText(fontname, text, posX, posY, kerning, scaleX, scaleY, redRanges, paragraphBreaks)
     kerning = kerning or 0
     scaleX = scaleX or 1
@@ -487,7 +485,7 @@ function SANS.DrawText(fontname, text, posX, posY, kerning, scaleX, scaleY, redR
     -- line gap is a flat 4px, added after scaling so it doesn't get doubled at fontScale=2
     local LINE_GAP = 4
     local lineHeight = underscore and (underscore.height * scaleY + LINE_GAP) or 0
-    local PARAGRAPH_LINE_MULT = 1.5 -- was a flat 2x, brought down per explicit request
+    local PARAGRAPH_LINE_MULT = 1.5 -- extra line-height multiplier for real paragraph breaks
 
     local ownsColor = redRanges ~= nil
     if ownsColor then
@@ -499,8 +497,7 @@ function SANS.DrawText(fontname, text, posX, posY, kerning, scaleX, scaleY, redR
 
         if charCode == 10 then -- "\n"
             x = posX
-            -- paragraphBreaks[i]==true means this \n is a real paragraph break (table-element boundary), not just a
-            -- word-wrapped continuation line - gets the bigger gap, see dialogue.lua's BuildPageDisplay
+            -- paragraphBreaks[i]==true means a real paragraph break (not a word-wrapped line) and gets the bigger gap (see dialogue.lua's BuildPageDisplay)
             y = y + (paragraphBreaks and paragraphBreaks[i] and lineHeight * PARAGRAPH_LINE_MULT or lineHeight)
         else
             local glyph = fontTable[charCode]
@@ -548,7 +545,7 @@ function SANS.UpdateHealth()
     local currenthpW = barW * math.max(p.hp - p.kr, 0) / p.max_hp
     local hpW = math.min(p.hp > 0 and math.max(currenthpW, 1) or 0, barW - krW)
 
-    -- Lost hp (background - shows through wherever hp+karma don't cover)
+    -- Lost hp (background; shows through wherever hp+karma don't cover)
     love.graphics.setColor(1, 0, 0, 1)
     love.graphics.rectangle("fill", hb.rectX, hb.rectY, barW, hb.rectH)
 
@@ -571,7 +568,7 @@ local fixedDt = 1 / 30 -- 30fps
 
 -- Game:update body
 function SANS.hooks.Update(dt)
-    -- don't tick G.E_MANAGER or clear_queue() here, both tried and reverted - see items/blinds.lua for the real fix
+    -- G.E_MANAGER/clear_queue() intentionally not ticked here (see items/blinds.lua)
 
     DTaccumulator = DTaccumulator + dt
 
@@ -627,9 +624,9 @@ function SANS.hooks.Update(dt)
         SANS.UpdateKarmaDrain(dt)
         SANS.UpdateHeartDeath(dt)
         SANS.UpdateFightMinigame(dt)
-        SANS.UpdateBattleText(dt) -- item-use/check flavor text typewriter (menu.lua) - no-op unless one is showing
-        SANS.UpdateMenuTextReveal(dt) -- "* Sans"/"* Check"/"* Spare"/item names/top flavor line typewriter (menu.lua) - no-op unless one is showing
-        SANS.UpdateMenuBones(dt) -- decorative menu bones (menu.lua) - no-op unless one is active
+        SANS.UpdateBattleText(dt) -- item-use/check flavor text typewriter (menu.lua); no-op unless one is showing
+        SANS.UpdateMenuTextReveal(dt) -- "* Sans"/"* Check"/"* Spare"/item names/top flavor line typewriter (menu.lua); no-op unless one is showing
+        SANS.UpdateMenuBones(dt) -- decorative menu bones (menu.lua); no-op unless one is active
 
         -- heart movement + clamping for every rotation
         if SANS.images.PlayerHeart and not SANS.MENU.state and not SANS.heartDeath then
@@ -699,7 +696,7 @@ function SANS.hooks.Update(dt)
                 if floorDist <= 0.2 or (downY > 0.5 and landedOnPlatform) then
                     heart.grounded = true
 
-                    -- Slammed is consumed on the very next landing regardless of speed - only a real SansSlam can ever trigger impact damage/sound, not an ordinary fast fall
+                    -- Slammed is consumed on the very next landing regardless of speed; only a real SansSlam can ever trigger impact damage/sound, not an ordinary fast fall
                     if not wasGrounded and heart.slammed then
                         heart.slammed = false
                         if alongSpeed > 330 then
@@ -720,7 +717,7 @@ function SANS.hooks.Update(dt)
                 end
 
                 if ceilDist <= 0 and alongSpeed < 0 then
-                    -- bonk the wall behind (the old "ceiling" case, generalized)
+                    -- bonk the wall behind (generalized ceiling bonk)
                     heart.vx = (heart.vx or 0) - alongSpeed * downX
                     heart.vy = (heart.vy or 0) - alongSpeed * downY
                 end
@@ -749,8 +746,7 @@ end
 
 -- love.draw body
 function SANS.hooks.Draw()
-    -- the spare ending's final video deliberately bypasses the mod's usual 640x480 canvas entirely and draws at real
-    -- native resolution - see SANS.DrawFinalSpareVideo (dialogue.lua)
+    -- the spare ending's final video deliberately bypasses the mod's usual 640x480 canvas and draws at native resolution (see SANS.DrawFinalSpareVideo, dialogue.lua)
     if SANS.spareSequence.active and SANS.spareSequence.phase == "finalVideo" then
         SANS.DrawFinalSpareVideo()
         return
@@ -782,10 +778,10 @@ function SANS.hooks.Draw()
         -- spare ending, once the dialogue's dismissed: everything disappears, replaced by the video/white screen (dialogue.lua)
         SANS.DrawSpareSequence()
     elseif SANS.winSequence.active then
-        -- win ending: survived sans_final's whole moveset - fade to white, text, fade to black, looping video (dialogue.lua)
+        -- win ending: survived sans_final's whole moveset; fade to white, text, fade to black, looping video (dialogue.lua)
         SANS.DrawWinSequence()
     else
-    -- heart's hidden entirely whenever sans is talking (or about to - the 1s beat before "ready?" counts too), player's not in control during a bubble
+    -- heart's hidden entirely whenever sans is talking (or about to; the 1s beat before "ready?" counts too), player's not in control during a bubble
     local dialogueActive = SANS.dialogue.active ~= nil or SANS.dialogue.introDelayTimer ~= nil
 
     -- the "ready?" bubble (and the silent beat before it) also hides the combat zone border, nothing's started yet so there's no zone to show
@@ -799,8 +795,7 @@ function SANS.hooks.Draw()
     if SANS.player.kr ~= 0 and SANS.player.hp > 1 then
         love.graphics.setColor(1, 0, 1, 1)
     end
-    -- Battle.xml sources this at world (416,400), but that reads 2px higher than the name text right next to it on
-    -- screen (confirmed by pixel-measuring a real screenshot) - bumped to y=402 to match SANS.player.name's row instead
+    -- world (416,402), aligned with SANS.player.name's row
     SANS.DrawText("BattleFont", string.format("%02d", SANS.player.hp) .. " / " .. tostring(SANS.player.max_hp), 416, 402, 1, 3, 3)
     love.graphics.setColor(1, 1, 1, 1)
 
@@ -828,7 +823,7 @@ function SANS.hooks.Draw()
 
     SANS.DrawGasterBlasterBeams()
 
-    -- CombatZone-tier attacks (BoneH, Platforms, GasterBlaster sprite, BoneStabWarn) - same tier as the heart, drawn above it
+    -- CombatZone-tier attacks (BoneH, Platforms, GasterBlaster sprite, BoneStabWarn); same tier as the heart, drawn above it
     for _, img in pairs(SANS.images) do
         if img.visible and img.isAttack and not img.clippedLayer and (not img.hideOutsideCombatZone or SANS.IsImageInCombatZone(img)) then
             if img.draw then
@@ -839,7 +834,7 @@ function SANS.hooks.Draw()
         end
     end
 
-    -- CombatZoneClipped-tier attacks (BoneV, BoneStab) - source's layer above CombatZone, drawn last of the gameplay sprites
+    -- CombatZoneClipped-tier attacks (BoneV, BoneStab); source's layer above CombatZone, drawn last of the gameplay sprites
     for _, img in pairs(SANS.images) do
         if img.visible and img.isAttack and img.clippedLayer and (not img.hideOutsideCombatZone or SANS.IsImageInCombatZone(img)) then
             if img.draw then
@@ -919,7 +914,7 @@ function SANS.hooks.DrawDeathFade()
     love.graphics.setColor(1, 1, 1, 1)
 end
 
--- everything needed to actually start the fight, once SANS.state is already true - shared by the intro-anim completion (see introanim.lua) and ToggleState's own on-branch
+-- everything needed to actually start the fight, once SANS.state is already true; shared by the intro-anim completion (see introanim.lua) and ToggleState's own on-branch
 function SANS.BeginFight()
     print("Sans on")
     CHANNEL:push({ type = "stop" })  -- Stops all audio
@@ -971,7 +966,7 @@ function SANS.BeginFight()
     SANS.dialogue.PlayIntro()
 end
 
--- flips SANS.state - the intro-anim completion (introanim.lua) sets SANS.state directly and calls BeginFight itself instead of going through here
+-- flips SANS.state; the intro-anim completion (introanim.lua) sets SANS.state directly and calls BeginFight itself instead of going through here
 function SANS.hooks.ToggleState()
     SANS.state = not SANS.state
 
@@ -996,7 +991,7 @@ function SANS.hooks.ToggleState()
     end
 end
 
--- suppresses just the one stale post-freeze hand-draw instead of nuking the whole event queue (that killed other stuck-pending UI too)
+-- suppresses just the one stale post-freeze hand-draw event
 function SANS.hooks.DrawFromDeckToHand(e, original)
     if SANS.suppressNextHandDraw then
         SANS.suppressNextHandDraw = false
@@ -1007,8 +1002,7 @@ end
 
 -- love.keypressed body, only reached while SANS.state is on
 function SANS.hooks.Keypressed(key, scancode, isrepeat)
-    -- Z confirms same as Enter (undertale's own confirm key) - normalized here so every "return" check below and in
-    -- menu.lua gets it for free. Matches on both scancode and key so it works on azerty as well as qwerty.
+    -- Z confirms same as Enter (undertale's own confirm key), matched on both scancode and key so it works on azerty as well as qwerty
     if scancode == "z" or key == "z" then scancode = "return" end
 
     if scancode == "l" and not isrepeat then
@@ -1025,8 +1019,7 @@ function SANS.hooks.Keypressed(key, scancode, isrepeat)
         return
     end
 
-    -- once the intro dialogue's dismissed, the spare sequence owns the whole screen - no menu nav underneath it.
-    -- "text" is the one phase that still wants Enter (1st press reveals, 2nd advances, same as every other typewriter)
+    -- once the intro dialogue's dismissed, the spare sequence owns the whole screen; "text" phase still wants Enter (1st press reveals, 2nd advances)
     if SANS.spareSequence.active and SANS.spareSequence.phase ~= "dialogue" then
         if SANS.spareSequence.phase == "text" and scancode == "return" and not isrepeat then
             SANS.AdvanceSpareText()
@@ -1034,8 +1027,7 @@ function SANS.hooks.Keypressed(key, scancode, isrepeat)
         return
     end
 
-    -- win sequence owns the whole screen too - "text" wants Enter same as above, "video" only wants it once the
-    -- video's completed at least one full loop (not before - see SANS.UpdateWinSequence)
+    -- win sequence owns the whole screen too; "text" wants Enter same as above, "video" only once it's completed at least one full loop (see SANS.UpdateWinSequence)
     if SANS.winSequence.active then
         if scancode == "return" and not isrepeat then
             if SANS.winSequence.phase == "text" then

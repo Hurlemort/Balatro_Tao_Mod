@@ -1,4 +1,4 @@
--- Sans's between-attack dialogue - decoupled from the attack csv system on purpose, triggers off hitAttempts changing, never touches a .csv.
+-- Sans's between-attack dialogue; decoupled from the attack csv system on purpose, triggers off hitAttempts changing, never touches a .csv.
 SANS.dialogue = SANS.dialogue or {}
 
 -- chars that don't make a blip sound when the typewriter reveals them
@@ -11,7 +11,7 @@ function SANS.IsSilentChar(c)
     return SANS.SILENT_CHARS[c] == true
 end
 
--- colour tags dialogue text can use - add new ones here, DrawText (hooks.lua) just reads whatever colour the range carries
+-- colour tags dialogue text can use; add new ones here, DrawText (hooks.lua) just reads whatever colour the range carries
 SANS.DIALOGUE_TAG_COLORS = {
     red = { 1, 0, 0, 1 },
     orange = { 1, 0.5, 0, 1 },
@@ -168,7 +168,7 @@ SANS.dialogue.blocks = {
         { text = "and that day's\nTODAY.", pose = { head = "Wink", torso = "Default" } },
     },
     [20] = {
-        -- "[sweat1 from this point onwards]" - sweat level drops from 2 back to 1 here.
+        -- "[sweat1 from this point onwards]"; sweat level drops from 2 back to 1 here.
         { text = "cause...\ny'see..", pose = { head = "ClosedEyes", torso = "Default", sweat = 1 } },
         { text = "all this fighting\nis really tiring\nme out.", pose = { head = "LookLeft", torso = "Default" } },
     },
@@ -177,19 +177,19 @@ SANS.dialogue.blocks = {
         { text = "then i'll be\nforced to use my\n<red>special attack</red>.", pose = { head = "Wink", torso = "Default" } },
     },
     [22] = {
-        -- "[sweat2 from this point onwards]" - back up to sweat level 2.
+        -- "[sweat2 from this point onwards]"; back up to sweat level 2.
         { text = "yeah, my <red>special\nattack</red>.\nsound familiar?", pose = { head = "Wink", torso = "Default", sweat = 2 } },
         { text = "well, get ready.\ncause after the\nnext move, i'm\ngoing to <red>use it</red>.", pose = { head = "LookLeft", torso = "Default" } },
         { text = "so, if you don't\nwanna see it, now\nwould be a good\ntime to die.", pose = { head = "Wink", torso = "Default" } },
     },
     [23] = {
-        -- "[no sweat for final attack]" - sweat level back to 0.
+        -- "[no sweat for final attack]"; sweat level back to 0.
         { text = "well, here goes\nnothing...", pose = { head = "ClosedEyes", torso = "Default", sweat = 0 } },
         { text = "are you ready?", pose = { head = "Wink", torso = "Default" } },
         { text = "survive THIS, and\ni'll show you my\n<red>special attack</red>!", pose = { head = "NoEyes", torso = "Default" } },
     },
 
-    -- plays when the player actually spares Sans while he's spareable (hits==13) - see SANS.StartSpareSequence below
+    -- plays when the player actually spares Sans while he's spareable (hits==13); see SANS.StartSpareSequence below
     spareEnding = {
         { text = "Oh...", pose = { head = "Wink", torso = "Default", sweat = 0 } },
         { text = "I never thought\nyou'd actually\nspare me.", pose = { head = "Default", torso = "Default" } },
@@ -256,7 +256,7 @@ function SANS.dialogue.HandleEnter()
     return true
 end
 
--- called from the fight minigame with the fresh hitAttempts, decides if dialogue plays before the next attack - 13 also swaps to the chokedup music
+-- called from the fight minigame with the fresh hitAttempts, decides if dialogue plays before the next attack; 13 also swaps to the chokedup music
 function SANS.dialogue.PlayForHits(hits, onComplete)
     if hits == 13 then
         SANS.PlayMusic("mus_chokedup")
@@ -294,7 +294,7 @@ function SANS.dialogue.Update(dt)
     end
 end
 
--- BeginFight runs straight into this - a beat of silence before Sans actually starts talking, so the fight doesn't
+-- BeginFight runs straight into this; a beat of silence before Sans actually starts talking, so the fight doesn't
 -- slam directly from the intro cutscene/toggle into dialogue
 function SANS.dialogue.PlayIntro()
     SANS.dialogue.introDelayTimer = 0.5 -- was 1s, halved per explicit request
@@ -309,8 +309,8 @@ function SANS.dialogue.StartIntroDialogue()
             SANS.dialogue.Play(SANS.dialogue.blocks.intro.after, function()
                 SANS.dialogue.deferEndAttackEntry = false
                 SANS.MENU.state = true
-                SANS.MENU.flavorText = SANS.ComputeFlavorText() -- see attackloader.lua's EndAttack - this mirrors the same freeze-on-menu-open for the deferred-entry path
-                SANS.SpawnMenuBonesForHits(SANS.hitAttempts) -- see menu.lua's MenuBones section - same mirroring
+                SANS.MENU.flavorText = SANS.ComputeFlavorText() -- see attackloader.lua's EndAttack; this mirrors the same freeze-on-menu-open for the deferred-entry path
+                SANS.SpawnMenuBonesForHits(SANS.hitAttempts) -- see menu.lua's MenuBones section; same mirroring
                 if not SANS.attackrunner.musicStarted then
                     SANS.attackrunner.musicStarted = true
                     SANS.PlayMusic("mus_zz_megalovania")
@@ -333,7 +333,7 @@ SANS.spareSequence.textPages = {
 
 local SPARE_TEXT_PADDING = 24  -- not a source value, just enough that the text doesn't stick to the screen edges
 local SPARE_TEXT_SCALE = 2     -- back down to the mod's usual 2x per explicit request (was bumped to 3x earlier)
-local SPARE_LINE_WAIT = 0.3    -- not a source value - pause before a new PARAGRAPH starts typing (not every \n anymore)
+local SPARE_LINE_WAIT = 0.3    -- not a source value; pause before a new PARAGRAPH starts typing (not every \n anymore)
 local SPARE_FADE_TIME = 0.6    -- not a source value, a guess at a reasonable fade-to-black length
 
 -- flattens a page's paragraphs into one string + which "\n" positions are real paragraph breaks vs plain wrap
@@ -426,7 +426,7 @@ function SANS.StartSpareSequence()
     end)
 end
 
--- Enter's handler for the "text" phase - same 1st-press-reveals/2nd-press-advances convention as every other
+-- Enter's handler for the "text" phase; same 1st-press-reveals/2nd-press-advances convention as every other
 -- typewriter in this mod (SANS.dialogue.HandleEnter, SANS.AdvanceBattleText)
 function SANS.AdvanceSpareText()
     local s = SANS.spareSequence
@@ -450,10 +450,10 @@ function SANS.AdvanceSpareText()
     end
 end
 
--- second-thoughts text typed out over the fade to black - per explicit request, not a source line
+-- second-thoughts text typed out over the fade to black; per explicit request, not a source line
 local WRONG_ONE_TEXT = "NO WAIT THAT'S THE WRONG ONE"
 
--- called every fixed tick (see hooks.lua's Game:update) - no-op unless the sequence is actually running
+-- called every fixed tick (see hooks.lua's Game:update); no-op unless the sequence is actually running
 function SANS.UpdateSpareSequence(dt)
     local s = SANS.spareSequence
     if not s.active then return end
@@ -467,7 +467,7 @@ function SANS.UpdateSpareSequence(dt)
         end
     elseif s.phase == "text" then
         -- same per-char typewriter cadence as SANS.UpdateBattleText, but only pauses at a real paragraph break
-        -- (page.breaks) - a plain word-wrap "\n" inside one paragraph reveals immediately, no pause
+        -- (page.breaks); a plain word-wrap "\n" inside one paragraph reveals immediately, no pause
         local page = s.textPages[s.textIndex]
         if page and s.textRevealed < #page.display then
             if s.textLineWait and s.textLineWait > 0 then
@@ -488,7 +488,7 @@ function SANS.UpdateSpareSequence(dt)
         local t = math.min(s.fadeTimer / SPARE_FADE_TIME, 1)
 
         -- reveal tied directly to fade progress (not its own timer) so it always finishes exactly as the screen goes
-        -- black - volume drops along with it (1 - t), the same falloff the black overlay gives the text's contrast
+        -- black; volume drops along with it (1 - t), the same falloff the black overlay gives the text's contrast
         local targetRevealed = math.floor(t * #WRONG_ONE_TEXT)
         if targetRevealed > (s.wrongOneRevealed or 0) then
             for i = (s.wrongOneRevealed or 0) + 1, targetRevealed do
@@ -529,7 +529,7 @@ function SANS.RestartRunAfterSpareEnding()
     check_for_unlock({ type = "ach_tao_spare_sans" })
 end
 
--- called once the sequence leaves "dialogue" phase - video/text/fade replace the whole screen (finalVideo's separate, bypasses the canvas)
+-- called once the sequence leaves "dialogue" phase; video/text/fade replace the whole screen (finalVideo's separate, bypasses the canvas)
 function SANS.DrawSpareSequence()
     local s = SANS.spareSequence
     local phase = s.phase
@@ -560,7 +560,7 @@ function SANS.DrawSpareSequence()
         love.graphics.setColor(0, 0, 0, 1)
         SANS.DrawText("DefaultFont", WRONG_ONE_TEXT:sub(1, s.wrongOneRevealed or 0), SPARE_TEXT_PADDING, SPARE_TEXT_PADDING, SPARE_TEXT_SCALE, SPARE_TEXT_SCALE, SPARE_TEXT_SCALE)
 
-        -- drawn last so it darkens the text too - contrast fades out with the background instead of staying legible
+        -- drawn last so it darkens the text too; contrast fades out with the background instead of staying legible
         local t = math.min((s.fadeTimer or 0) / SPARE_FADE_TIME, 1)
         love.graphics.setColor(0, 0, 0, t)
         love.graphics.rectangle("fill", 0, 0, 640, 480)
@@ -634,7 +634,7 @@ function SANS.AdvanceWinText()
     end
 end
 
--- Enter's handler once the video's up - only reachable after the first full loop, see hooks.lua's Keypressed
+-- Enter's handler once the video's up; only reachable after the first full loop, see hooks.lua's Keypressed
 function SANS.AdvanceWinSequence()
     SANS.winSequence.active = false
     SANS.winSequence.phase = nil
@@ -642,7 +642,7 @@ function SANS.AdvanceWinSequence()
     SANS.WinFight()
 end
 
--- called every fixed tick (see hooks.lua's Game:update) - no-op unless the sequence is actually running
+-- called every fixed tick (see hooks.lua's Game:update); no-op unless the sequence is actually running
 function SANS.UpdateWinSequence(dt)
     local s = SANS.winSequence
     if not s.active then return end
@@ -653,7 +653,7 @@ function SANS.UpdateWinSequence(dt)
             s.phase = "text"
         end
     elseif s.phase == "text" then
-        -- only pauses at a real paragraph break (page.breaks) - a plain word-wrap "\n" reveals with no pause
+        -- only pauses at a real paragraph break (page.breaks); a plain word-wrap "\n" reveals with no pause
         local page = s.textPages[s.textIndex]
         if page and s.textRevealed < #page.display then
             if s.textLineWait and s.textLineWait > 0 then
@@ -677,7 +677,7 @@ function SANS.UpdateWinSequence(dt)
             if ok then
                 s.video = result
                 local src = result:getSource()
-                if src then src:setVolume(0) end -- kept (LÖVE needs a track present to play at all) but silenced - spaceship.ogg plays instead
+                if src then src:setVolume(0) end -- kept (LÖVE needs a track present to play at all) but silenced; spaceship.ogg plays instead
                 result:play()
                 SANS.PlayMusic("spaceship")
             else

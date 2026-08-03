@@ -10,7 +10,7 @@ priority = 0
 # blind) is a separate code path and is deliberately NOT touched.
 #
 # NOTE: Lovely's pattern-type patches match whole lines, not substrings
-# within a line - an earlier version of this file only matched the
+# within a line; an earlier version of this file only matched the
 # "string.rep(...)" fragment and silently produced "no matches" (visible
 # in Mods/lovely/log/*.log) because it was embedded mid-line inside a
 # much longer statement. Both patterns below now spell out the FULL
@@ -29,7 +29,7 @@ match_indent = true
 # Spot 2: hovering a blind in the run info/collection screen
 # (create_UIBox_blind_popup, the tooltip shown by create_UIBox_your_collection_blinds).
 # Vanilla never had a "+" here at all (just the raw icon count or '-' for
-# no reward) - added one to match spot 1's convention once it collapses
+# no reward); added one to match spot 1's convention once it collapses
 # to text, per request. Below $10 / no reward, behaviour is unchanged.
 [[patches]]
 [patches.pattern]
@@ -41,7 +41,7 @@ match_indent = true
 
 # Spot 3: the top-left HUD reward text while a blind is actually being played
 # (Blind:set_blind, sets G.GAME.current_round.dollars_to_be_earned when the
-# blind becomes the current one for the round - this is what G.HUD_blind
+# blind becomes the current one for the round; this is what G.HUD_blind
 # actually reads from during play).
 [[patches]]
 [patches.pattern]

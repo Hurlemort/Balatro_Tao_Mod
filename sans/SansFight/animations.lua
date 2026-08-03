@@ -171,7 +171,7 @@ function SANS.attackloader.SansEndRepeat()
     SANS.animations.legs.xSpeed = 0
 end
 
--- CSV: SansText(Text) - typewriter reveal one char per tick with a blip, pulls out any <red> tags first
+-- CSV: SansText(Text); typewriter reveal one char per tick with a blip, pulls out any <red> tags first
 function SANS.attackloader.SansText(Text)
     local plain, ranges = SANS.ParseColorTags(Text)
     SANS.animations.text = plain

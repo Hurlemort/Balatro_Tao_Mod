@@ -264,7 +264,7 @@ function SANS.attackloader.BoneV(XPosition, YPosition, Height, Direction, Speed,
         height = Height,
         vx = dir.x * Speed,
         vy = dir.y * Speed,
-        karma = 6, -- Battle.xml sets Karma=6 on BoneV creation (~line 4569), same as BoneH - the old 5 came from Undertale's obj_boneloop_v, not the C2 remake
+        karma = 6, -- Battle.xml sets Karma=6 on BoneV creation (~line 4569), same as BoneH; the old 5 came from Undertale's obj_boneloop_v, not the C2 remake
         color = colorTable,
         topSegment = topSegment,
         bottomSegment = bottomSegment,
@@ -357,7 +357,7 @@ function SANS.attackloader.BoneH(XPosition, YPosition, Width, Direction, Speed, 
         rightSegment = rightSegment,
         middleWidth = middleWidth,
         draw = function(bone)
-            -- BoneH lives on source's plain (unclipped) CombatZone layer - unlike BoneV it's never scissor-clipped, regardless of direction
+            -- BoneH lives on source's plain (unclipped) CombatZone layer; unlike BoneV it's never scissor-clipped, regardless of direction
             love.graphics.setColor(1, 1, 1, 1)
             if bone.leftSegment and bone.leftSegment.img then
                 love.graphics.draw(bone.leftSegment.img, bone.x, bone.y)
@@ -480,7 +480,7 @@ SANS.slam.directions = SANS.slam.directions or {
 
 SANS.slam.damageEnabled = SANS.slam.damageEnabled or false
 
--- no warning/delay, just rotates + launches the heart immediately, matches source - only BoneStab gets a telegraph
+-- no warning/delay, just rotates + launches the heart immediately, matches source; only BoneStab gets a telegraph
 function SANS.attackloader.SansSlam(Direction)
     local dirIndex = tonumber(Direction) or 0
     local dir = SANS.slam.directions[dirIndex] or SANS.slam.directions[0]
@@ -498,7 +498,7 @@ function SANS.attackloader.SansSlam(Direction)
     heart.vx = dir.x * speed
     heart.vy = dir.y * speed
     heart.grounded = false
-    heart.slammed = true -- consumed on the next landing (hooks.lua) - only a real SansSlam can trigger impact damage/sound, not an ordinary fast fall
+    heart.slammed = true -- consumed on the next landing (hooks.lua); only a real SansSlam can trigger impact damage/sound, not an ordinary fast fall
 end
 
 function SANS.attackloader.SansSlamDamage(BooleanEnabled)

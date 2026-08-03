@@ -17,7 +17,7 @@ local function update(self, dt)
 end
 Game.update = update
 
--- Draw hook (same handoff as Update - the fade overlay draws on top of the real game underneath)
+-- Draw hook (same handoff as Update; the fade overlay draws on top of the real game underneath)
 local draw_hook = love.draw or function() end
 local function draw()
     if SANS.state then
@@ -29,7 +29,7 @@ local function draw()
 end
 love.draw = draw
 
--- Load hook (not state-gated - both the original load and the framebuffer setup always run)
+-- Load hook (no condition : needs to be loaded from the start))
 local load_hook = love.load or function() end
 local function load()
     load_hook()
@@ -37,7 +37,7 @@ local function load()
 end
 love.load = load
 
--- the fight only ever starts via actually selecting the Sans blind now (see items/blinds.lua) - no manual debug keybind to turn it on
+-- the fight only ever starts via actually selecting the Sans blind
 local keypressed_hook = love.keypressed
 local function keypressed(key, scancode, isrepeat)
     if not SANS.state then
@@ -48,7 +48,7 @@ local function keypressed(key, scancode, isrepeat)
 end
 love.keypressed = keypressed
 
--- draw_from_deck_to_hand hook (not state-gated - the stale draw this suppresses fires after SANS.state is already back to false)
+-- draw_from_deck_to_hand hook (for intro/outro)
 local draw_from_deck_to_hand_hook = G.FUNCS.draw_from_deck_to_hand
 G.FUNCS.draw_from_deck_to_hand = function(e)
     return SANS.hooks.DrawFromDeckToHand(e, draw_from_deck_to_hand_hook)

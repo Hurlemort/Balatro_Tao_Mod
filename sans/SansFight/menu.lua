@@ -234,7 +234,7 @@ function SANS.DrawItemMenu()
         end
     end
 
-    -- draw page number - reverted 2026-07-23 (2nd pass) back to the original committed value
+    -- draw page number; reverted 2026-07-23 (2nd pass) back to the original committed value
     SANS.DrawText("DefaultFont", "PAGE " .. tostring(SANS.MENU.item_page), 363, 325, 2, SANS.MENU.fontScale, SANS.MENU.fontScale)
 
     -- Snap heart position
@@ -346,7 +346,7 @@ function SANS.AdvanceBattleText()
     if heart then heart.visible = true end -- attacks expect a visible heart (EndAttack normally re-shows it)
 
     if SANS.IsSansSparing() then
-        -- while sparable, ITEM/CHECK must never advance the attack sequence - only FIGHT/SPARE may leave this state
+        -- while sparable, ITEM/CHECK must never advance the attack sequence; only FIGHT/SPARE may leave this state
         SANS.attackrunner.StartAttack("sans_spare")
     else
         SANS.attackrunner.RunNextAttack()
@@ -564,14 +564,14 @@ end
 
 -- MenuBones: purely decorative, a bone bounces in from the left + bones pop up under icons in phase 2, no damage
 SANS.menuBones = SANS.menuBones or {
-    left = nil,             -- { x, y, timer, destroy } or nil - single instance, matches the source
+    left = nil,             -- { x, y, timer, destroy } or nil; single instance, matches the source
     bottomActive = false,   -- whether the 0.6s spawn cycle below is currently running
     bottomTimer = 0,
     bottomAlternate = 0,    -- flips 0/1 every spawn cycle: alternates which icon pair gets a bone
-    bottom = {},            -- list of { x, y, button, state } - state 0=rising,1=sliding,2=falling
+    bottom = {},            -- list of { x, y, button, state }; state 0=rising,1=sliding,2=falling
 }
 
--- both nudged 8px higher than Battle.xml's authored 270/440, per explicit request - a deliberate mod-only tweak
+-- both nudged 8px higher than Battle.xml's authored 270/440, per explicit request; a deliberate mod-only tweak
 local MENUBONE_LEFT_Y = 262
 local MENUBONE_BOTTOM_SPAWN_INTERVAL = 0.6
 local MENUBONE_BOTTOM_RISE_SPEED = 300
@@ -579,7 +579,7 @@ local MENUBONE_BOTTOM_RISE_TARGET_Y = 432
 local MENUBONE_BOTTOM_SLIDE_SPEED = 150
 local MENUBONE_BOTTOM_SLIDE_MARGIN = 14
 local MENUBONE_BOTTOM_FALL_SPEED = 300
-local MENUBONE_LAYOUT_HEIGHT = 480 -- C2's LayoutHeight - matches this mod's 640x480 framebuffer
+local MENUBONE_LAYOUT_HEIGHT = 480 -- C2's LayoutHeight; matches this mod's 640x480 framebuffer
 
 function SANS.SpawnMenuBoneLeft()
     SANS.menuBones.left = { x = -30, y = MENUBONE_LEFT_Y, timer = 0, destroy = false }
