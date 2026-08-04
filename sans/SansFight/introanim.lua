@@ -41,7 +41,8 @@ function SANS.StartIntroAnim()
     if SANS.introAnim.active or SANS.state then return end
 
     SANS.state = true -- freezes the real game immediately (Game.update stops running, see globals.lua); we own the screen from here on
-    SANS.suppressNextHandDraw = true -- new_round()'s stale draw-to-hand call gets suppressed once it fires, see hooks.lua
+    SANS.awaitingRoundSetup = true -- lets the round finish setting itself up behind the cutscene, see globals.lua
+    SANS.roundSetupTimer = 0
     love.thread.getChannel("sound_request"):push({ type = "stop" }) -- stop Balatro's music now too, not just at BeginFight
     love.graphics.setDefaultFilter("nearest", "nearest", 1)
 

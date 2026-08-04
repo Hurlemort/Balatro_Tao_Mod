@@ -909,6 +909,10 @@ function SANS.hooks.DrawDeathFade()
     SANS.DrawHeartDeath()
     love.graphics.setCanvas()
 
+    -- black covers the whole window, not just the letterboxed framebuffer area
+    love.graphics.setColor(0, 0, 0, alpha)
+    love.graphics.rectangle("fill", 0, 0, w, h)
+
     love.graphics.setColor(1, 1, 1, alpha)
     love.graphics.draw(framebuffer, offset_x, offset_y, 0, scale, scale)
     love.graphics.setColor(1, 1, 1, 1)
@@ -991,15 +995,6 @@ function SANS.hooks.ToggleState()
     end
 end
 
--- suppresses just the one stale post-freeze hand-draw event
-function SANS.hooks.DrawFromDeckToHand(e, original)
-    if SANS.suppressNextHandDraw then
-        SANS.suppressNextHandDraw = false
-        e = 0
-    end
-    return original(e)
-end
-
 -- love.keypressed body, only reached while SANS.state is on
 function SANS.hooks.Keypressed(key, scancode, isrepeat)
     -- Z confirms same as Enter (undertale's own confirm key), matched on both scancode and key so it works on azerty as well as qwerty
@@ -1009,6 +1004,22 @@ function SANS.hooks.Keypressed(key, scancode, isrepeat)
         -- playtest invincibility so you can watch a full runthrough without dying partway
         SANS.invincible = not SANS.invincible
         print("[TAO][SANS][CHEAT] Manual invicibility : " .. (SANS.invincible and "ON" or "OFF"))
+    end
+    -- both stop the running attack first, same as the real triggers do
+    if scancode == "f" and not isrepeat then
+        print("[TAO][SANS][CHEAT] Fight ending")
+        SANS.attackrunner.active = nil
+        SANS.DestroyAllAttacks()
+        SANS.MENU.state = false
+        SANS.StartWinSequence()
+    end
+    if scancode == "g" and not isrepeat then
+        print("[TAO][SANS][CHEAT] Spare ending")
+        SANS.attackrunner.active = nil
+        SANS.DestroyAllAttacks()
+        SANS.MENU.state = false
+        SANS.MENU.substate = nil
+        SANS.StartSpareSequence()
     end
 
     -- a dialogue bubble owns Enter and swallows every other key too, so menu nav can't sneak through underneath it

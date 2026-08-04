@@ -22,7 +22,7 @@ SMODS.Edition({
         label = "Saliva",
         text = {
             "Gives {C:mult}+#1#{} Mult",
-            "{C:inactive}({}{C:mult}+#2#^n{} Mult{C:inactive} where {}{C:attention}n{}",
+            "{C:inactive}({}{C:mult}+#2#^n{}{C:inactive} Mult where {}{C:attention}n{}",
             "{C:inactive}is the number of Saliva card(s) owned){}",
         },
     },

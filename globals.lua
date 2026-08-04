@@ -1,6 +1,12 @@
 -- GLOBALS
 
 ------------------------------------------------------------
+-- Frame Cap
+------------------------------------------------------------
+-- sits below the display refresh so every frame finishes compositing before it is read
+G.FPS_CAP = 120
+
+------------------------------------------------------------
 -- Screen Effects Registry
 ------------------------------------------------------------
 -- entry needs is_active(), draw(canvas), remap_point(x,y); see blinds.lua
@@ -148,8 +154,7 @@ end
 ------------------------------------------------------------
 -- Applied Value Sync
 ------------------------------------------------------------
--- these track how much a joker has actually pushed into a global, so a value that changes while
--- the joker is in play (doubling) applies the difference right away and removal undoes the real amount
+-- tracks what a joker actually pushed into a global, so doubling and removal both settle up exactly
 
 -- clamped so card_limit never drops below 0
 function Tao.funcs.sync_joker_slots(card, target)
@@ -204,6 +209,23 @@ function Tao.funcs.clear_round_hands(card)
         G.GAME.round_resets.hands = G.GAME.round_resets.hands - (card.ability.extra.applied_hands or 0)
     end
     card.ability.extra.applied_hands = 0
+end
+
+LOST_DECK_MAX_HANDS = 1 -- the Lost Deck plays one hand a round, no matter who offers more
+
+function Tao.funcs.is_lost_deck()
+    local center = G.GAME and G.GAME.selected_back and G.GAME.selected_back.effect
+        and G.GAME.selected_back.effect.center
+    return center ~= nil and center.key == "b_tao_lost"
+end
+
+-- called from the patches that hand hands out, never on a timer
+function Tao.funcs.clamp_lost_deck_hands()
+    if not (G.GAME and G.GAME.current_round) then return end
+    if not Tao.funcs.is_lost_deck() then return end
+    if (G.GAME.current_round.hands_left or 0) > LOST_DECK_MAX_HANDS then
+        G.GAME.current_round.hands_left = LOST_DECK_MAX_HANDS
+    end
 end
 
 -- true while the joker is actually live, so update hooks don't re-apply on a debuffed card
@@ -602,28 +624,24 @@ local function tao_count_angry_birds()
     return count
 end
 
+-- true once the movie canvas exists and this sprite is showing it
+local function tao_ab_showing(sprite)
+    return sprite.tao_ab_video and Tao.assets.angry_birds.video_canvas
+end
+
 -- skip shader formatting
 local abm_draw_shader = Sprite.draw_shader
 function Sprite:draw_shader(_shader, _shadow_height, _send, _no_tilt, other_obj, ms, mr, mx, my, custom_shader, tilt_shadow)
-    if self.video then
+    if tao_ab_showing(self) then
         self:draw_self()
         return
     end
     abm_draw_shader(self, _shader, _shadow_height, _send, _no_tilt, other_obj, ms, mr, mx, my, custom_shader, tilt_shadow)
 end
 
-local abm_sprite_remove = Sprite.remove
-function Sprite:remove()
-    if self.tao_shared_video then
-        self.video = nil
-        self.tao_shared_video = nil
-    end
-    abm_sprite_remove(self)
-end
-
 local abm_draw_self = Sprite.draw_self
 function Sprite:draw_self(overlay)
-    if self.video then
+    if tao_ab_showing(self) then
         if not self.states.visible then return end
         if self.sprite_pos.x ~= self.sprite_pos_copy.x or self.sprite_pos.y ~= self.sprite_pos_copy.y then
             self:set_sprite_pos(self.sprite_pos)
@@ -631,7 +649,7 @@ function Sprite:draw_self(overlay)
         prep_draw(self, 1)
         love.graphics.scale(1/(self.scale.x/self.VT.w), 1/(self.scale.y/self.VT.h))
         love.graphics.setColor(overlay or G.BRUTE_OVERLAY or G.C.WHITE)
-        love.graphics.draw(Tao.assets.angry_birds.video_canvas or self.video, 0, 0, 0, self.VT.w/(self.T.w), self.VT.h/(self.T.h))
+        love.graphics.draw(Tao.assets.angry_birds.video_canvas, 0, 0, 0, self.VT.w/(self.T.w), self.VT.h/(self.T.h))
         love.graphics.pop()
         add_to_drawhash(self)
         self:draw_boundingrect()
@@ -683,11 +701,9 @@ function Tao.funcs.update_angry_birds(dt)
                 for _, card in ipairs(area.cards) do
                     if card.config and card.config.center and card.config.center.key == "j_tao_angrybirdsmovie"
                         and card.children.center and card.children.center.atlas == G.ASSET_ATLAS["tao_angry_birds"]
-                        and not card.children.center.video then
-                        local video = tao_angry_birds_video()
-                        if video then
-                            card.children.center.video = video
-                            card.children.center.tao_shared_video = true
+                        and not card.children.center.tao_ab_video then
+                        if tao_angry_birds_video() then
+                            card.children.center.tao_ab_video = true
                         end
                     end
                 end
@@ -698,20 +714,13 @@ function Tao.funcs.update_angry_birds(dt)
     if ab.video then
         local ok, src = pcall(function() return ab.video:getSource() end)
         if ok and src then
-            src:setVolume(ab.muted and 0 or math.min(1, (G.SETTINGS.SOUND.volume / 100) * (G.SETTINGS.SOUND.music_volume / 100) * 1.25))
+            src:setVolume(ab.muted and 0 or (G.SETTINGS.SOUND.volume / 100) * (G.SETTINGS.SOUND.music_volume / 100))
         elseif not ok then
             ab.video = nil
         end
     end
 
-    -- a reloaded run asks to jump the movie to the watch time its mult was saved at
-    if ab.video and ab.seek_to then
-        pcall(function() ab.video:seek(ab.seek_to) end)
-        ab.video_last_frame_idx = nil
-        ab.seek_to = nil
-    end
-
-    -- rewinding restarts picture and audio together, since both live on the one Video
+    -- the movie only ever plays forward; starting over means building a new video
     if ab.video then
         if ab.present then
             local ok_play, playing = pcall(function() return ab.video:isPlaying() end)
@@ -719,31 +728,30 @@ function Tao.funcs.update_angry_birds(dt)
                 if playing then
                     ab.started = true
                 elseif ab.started then
-                    ab.finished = true
-                    check_for_unlock({ type = "ach_tao_angry_birds_movie" })
-                    pcall(function()
-                        ab.video:rewind()
-                        ab.video:play()
-                    end)
+                    -- credits rolled: the picture holds on its last frame and the mult stops growing
+                    if not ab.finished then
+                        ab.finished = true
+                        check_for_unlock({ type = "ach_tao_angry_birds_movie" })
+                    end
                 else
                     pcall(function() ab.video:play() end)
                 end
             end
         elseif ab.started then
-            -- no copy on screen: halt picture and audio, back to the top for next time
-            pcall(function()
-                ab.video:pause()
-                ab.video:rewind()
-            end)
+            -- no copy left on screen: drop the video so the next one starts from the beginning
+            pcall(function() ab.video:pause() end)
+            pcall(function() ab.video:release() end)
+            ab.video = nil
+            ab.video_last_frame_idx = nil
             ab.started = false
+            ab.finished = false
         end
     end
 
     -- '' fades the music out through the game's own track logic
     if ab.present then
         G.video_soundtrack = ''
-        -- every copy watches the same screening, so they share one watch time; a copy picked up
-        -- later is pulled up to it. xmult stays per-card so a doubled copy still scales on its own.
+        -- every copy shares one watch time, while xmult stays per-card
         local watchers = {}
         for _, card in ipairs(G.jokers and G.jokers.cards or {}) do
             if card.config and card.config.center and card.config.center.key == "j_tao_angrybirdsmovie" then

@@ -4,9 +4,7 @@
 	#define MY_HIGHP_OR_MEDIUMP mediump
 #endif
 
-// Steamodded sends the card's motion state under the shader's own key:
-// saliva.x = VT.r*3 + time/28 + juice + tilt  (bumps with rotation/inclination)
-// saliva.y = real time
+// saliva.x is the card's motion (rotation, tilt, juice), saliva.y is real time
 extern MY_HIGHP_OR_MEDIUMP vec2 saliva;
 extern MY_HIGHP_OR_MEDIUMP number dissolve;
 extern MY_HIGHP_OR_MEDIUMP number time;
@@ -16,7 +14,7 @@ extern bool shadow;
 extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_1;
 extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_2;
 
-// ------------------------- tuning -------------------------
+
 #define CELL_SCALE 5.5        // approx. number of cells across the card
 #define EDGE_BAND 0.45        // width (in cell units) of the blurry rim of each cell
 #define MAX_BLUR_PX 3.5       // blur radius in sprite pixels at cell edges/interstices
@@ -25,10 +23,11 @@ extern MY_HIGHP_OR_MEDIUMP vec4 burn_colour_2;
 #define WOBBLE 0.32           // how far cell nuclei wander (keep < 0.5)
 #define BUBBLE_ZOOM 1.1        // per-cell magnifier strength; multiplied by each cell's own size
 #define BUBBLE_LIGHT 0.85      // overall intensity of the fake-3D sphere shading
-// -----------------------------------------------------------
+// lattice rings the Voronoi search covers; put it back to 2.0 if cells ever pop
+#define SEARCH_RING 1.0
 
-// sprite-local uv (0-1) -> atlas texture coords, clamped to this sprite's
-// rect so the blur never bleeds pixels from neighbouring atlas entries
+
+// sprite uv to atlas coords, clamped so the blur stays on this card
 vec2 uv_to_tc(vec2 uv)
 {
     vec2 clamped = clamp(uv, vec2(0.001), vec2(0.999));
@@ -85,12 +84,16 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
 {
     vec2 uv = (((texture_coords)*(image_details)) - texture_details.xy*texture_details.ba)/texture_details.ba;
 
+    // shadow passes draw black, so the cells, blur and lighting below are never seen
+    if (shadow) {
+        return dissolve_mask(Texel(texture, uv_to_tc(uv)) * colour, texture_coords, uv);
+    }
+
     float t = saliva.y;
     float rot = saliva.x; // accumulates with rotation, tilt, juice
     float aspect = texture_details.b / texture_details.a;
 
-    // --- cell-space coordinates: aspect corrected, slowly swirled by
-    // --- the card's rotation/tilt channel so the pattern reacts to motion
+    // cell space, swirled by the card's tilt so the pattern moves with it
     vec2 st = uv - vec2(0.5);
     st.x = st.x * aspect;
     float swirl = 0.18 * sin(rot * 0.9) + 0.05 * rot;
@@ -98,13 +101,7 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
     st = mat2(cs, -sn, sn, cs) * st;
     vec2 p = st * CELL_SCALE;
 
-    // --- multiplicatively-weighted Voronoi: nuclei drift and their
-    // --- weights (cell radii) breathe over time, each with its own phase.
-    // --- A Voronoi partition covers the whole plane, so no gaps, ever;
-    // --- the multiplicative weights are what round the cells out and
-    // --- make them different sizes. We also remember the winning cell's
-    // --- offset-from-nucleus (in p-space) and its weight -- every cell
-    // --- gets its own little bubble lens driven by these two numbers.
+    // weighted Voronoi: drifting nuclei, breathing radii, one bubble per cell
     vec2 g = floor(p);
     vec2 f = p - g;
 
@@ -112,13 +109,12 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
     float F2 = 8.0;
     vec2 F1_diff = vec2(0.0);
     float F1_w = 1.0;
-    for (float y = -2.0; y <= 2.0; y += 1.0) {
-        for (float x = -2.0; x <= 2.0; x += 1.0) {
+    for (float y = -SEARCH_RING; y <= SEARCH_RING; y += 1.0) {
+        for (float x = -SEARCH_RING; x <= SEARCH_RING; x += 1.0) {
             vec2 cell = vec2(x, y);
             vec2 h = hash22(g + cell);
             vec2 h2 = hash22(g + cell + vec2(41.7, 289.3));
-            // nucleus wanders inside its lattice cell; phase offset by the
-            // rotation channel so tilting the card sloshes the cells
+            // each nucleus wanders inside its cell, and tilting sloshes them
             vec2 nucleus = cell + vec2(0.5)
                 + WOBBLE * vec2(sin(t * (0.35 + 0.4*h.x) + h.y * 6.2831 + 0.35*rot),
                                 cos(t * (0.30 + 0.4*h.y) + h.x * 6.2831 - 0.28*rot));
@@ -131,61 +127,48 @@ vec4 effect( vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords
         }
     }
 
-    // edge metric: 0 exactly on a cell border (and in the interstices
-    // where several borders meet), grows toward each cell's center
+    // zero on a cell border, rising toward the middle
     float edge = F2 - F1;
     float blur_amt = 1.0 - smoothstep(0.0, EDGE_BAND, edge);
     blur_amt = blur_amt * blur_amt; // keep cell hearts crisp, rims soft
 
-    // --- per-cell bubble lens: each Voronoi cell magnifies its own
-    // --- centre, the way surface tension domes up a droplet. F1 is
-    // --- already the distance to this cell's nucleus normalised by the
-    // --- cell's own radius (0 at the nucleus, ~1 at its border), so it
-    // --- doubles as the bubble's radial coordinate. Bigger cells (a
-    // --- larger F1_w) get a stronger zoom, per the brief; the pull
-    // --- fades back to zero at r=1 so neighbouring cells stay seamless.
+    // every cell domes up like a droplet and magnifies its own middle
     float r = clamp(F1, 0.0, 1.0);
     float dome = sqrt(max(0.0, 1.0 - r * r)); // hemisphere height: 1 at centre -> 0 at rim
     float cell_zoom = BUBBLE_ZOOM * F1_w;
     float shrink = cell_zoom * dome / (1.0 + cell_zoom * dome); // in [0,1)
 
-    // undo (CELL_SCALE, swirl rotation, aspect) to turn the p-space
-    // nucleus offset back into a uv-space offset, so the lens can warp
-    // the actual sample coordinates
+    // back out to uv space so the lens can bend the real sample coords
     vec2 uv_diff = mat2(cs, sn, -sn, cs) * (F1_diff / CELL_SCALE);
     uv_diff.x /= aspect;
 
     vec2 bubble_uv = uv - uv_diff * shrink;
     vec4 original_pixel = Texel(texture, uv_to_tc(bubble_uv));
 
-    // --- Cryptid-style disc blur (blur.fs), radius scaled per-pixel by
-    // --- proximity to the cell edge, sampling clamped to this sprite
+    // disc blur, widening as it nears a cell edge
     float two_pi = 6.28318530718;
     vec2 radius = (MAX_BLUR_PX * blur_amt) / texture_details.ba;
 
     vec4 blurred_pixel = original_pixel;
-    float d_step = two_pi / BLUR_DIRECTIONS;
-    float i_step = 1.0 / BLUR_QUALITY;
-    for (float d = 0.0; d < two_pi; d += d_step) {
-        for (float i = i_step; i < 1.001; i += i_step) {
-            blurred_pixel += Texel(texture, uv_to_tc(bubble_uv + vec2(cos(d), sin(d)) * radius * i));
+    if (blur_amt > 0.01) {
+        float d_step = two_pi / BLUR_DIRECTIONS;
+        float i_step = 1.0 / BLUR_QUALITY;
+        for (float d = 0.0; d < two_pi; d += d_step) {
+            for (float i = i_step; i < 1.001; i += i_step) {
+                blurred_pixel += Texel(texture, uv_to_tc(bubble_uv + vec2(cos(d), sin(d)) * radius * i));
+            }
         }
+        blurred_pixel /= BLUR_QUALITY * BLUR_DIRECTIONS + 1.0;
     }
-    blurred_pixel /= BLUR_QUALITY * BLUR_DIRECTIONS + 1.0;
 
     vec4 tex = vec4(blurred_pixel.rgb, original_pixel.a);
 
-    // --- wet film: a faint milky sheen on the blurry rims, and a subtle
-    // --- specular glint that sweeps with the card's rotation channel
+    // milky sheen on the rims plus a glint that sweeps as the card turns
     float film = blur_amt * 0.16;
     float glint = 0.10 * blur_amt * max(0.0, sin(rot * 1.7 + (F1 - F2) * 3.0 + st.y * 4.0));
     tex.rgb = mix(tex.rgb, vec3(0.94, 0.97, 1.0), (film + glint) * tex.a);
 
-    // --- per-cell 3D shading: build a hemisphere normal from the same
-    // --- (direction, radius) pair driving the lens above, so every
-    // --- bubble reads as its own little lit sphere -- soft diffuse
-    // --- falloff, a tight specular hotspot, and a fresnel-style rim
-    // --- brightening near each cell's edge.
+    // light each bubble as its own little sphere
     vec2 dir = length(uv_diff) > 1e-5 ? normalize(uv_diff) : vec2(0.0);
     vec3 N = normalize(vec3(dir * r, dome));
     vec3 L = normalize(vec3(-0.35, 0.55, 0.75));

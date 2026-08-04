@@ -9,6 +9,15 @@ SANS._engineHooksInstalled = true
 local update_hook = Game.update
 local function update(self, dt)
     if SANS.state then
+        -- new_round() is still mid-setup when the blind hook freezes us, so let it finish behind the cutscene
+        -- instead of leaving its blocking delays and hand draw queued up to fire after the fight
+        if SANS.awaitingRoundSetup then
+            update_hook(self, dt)
+            SANS.roundSetupTimer = (SANS.roundSetupTimer or 0) + dt
+            if G.STATE == G.STATES.SELECTING_HAND or SANS.roundSetupTimer > 8 then
+                SANS.awaitingRoundSetup = false
+            end
+        end
         SANS.hooks.Update(dt)
     else
         update_hook(self, dt)
@@ -47,9 +56,3 @@ local function keypressed(key, scancode, isrepeat)
     end
 end
 love.keypressed = keypressed
-
--- draw_from_deck_to_hand hook (for intro/outro)
-local draw_from_deck_to_hand_hook = G.FUNCS.draw_from_deck_to_hand
-G.FUNCS.draw_from_deck_to_hand = function(e)
-    return SANS.hooks.DrawFromDeckToHand(e, draw_from_deck_to_hand_hook)
-end

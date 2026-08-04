@@ -78,6 +78,33 @@ SMODS.Blind {
 --     boss_colour = HEX('de4e5c'),
 -- }
 
+-- pays an Egg instead of money; the "EGG" reward text comes from the blind.lua patches (sans_patches.toml)
+SMODS.Blind {
+    name = "boss_tree",
+    key = "boss_tree",
+    atlas = "blinds",
+    pos = { x = 0, y = 1 },
+    dollars = 0,
+    mult = 2,
+    discovered = true,
+    loc_txt = {
+        name = 'The Tree',
+        text = {
+            "Pays an {C:attention}Egg{}",
+            "instead of money",
+        }
+    },
+    boss = { min = 0 },
+    boss_colour = HEX('000000'),
+
+    defeat = function(self)
+        local egg = SMODS.create_card({ set = 'Joker', key = 'j_egg', skip_materialize = true })
+        egg:add_to_deck()
+        G.jokers:emplace(egg) -- emplace ignores the slot limit, so the Egg can overflow
+        egg:juice_up(0.3, 0.5)
+    end,
+}
+
 SMODS.Blind {
     name = "boss_bestspark",
     key = "boss_bestspark",
@@ -98,8 +125,7 @@ SMODS.Blind {
 
     calculate = function(self, blind, context)
         if context.after and not G.GAME.blind.disabled then
-            -- current_hand.chips/mult are still the previous hand's here (update_hand_text defers),
-            -- so the live scoring parameters are what actually hold this hand's score
+            -- the live scoring parameters hold this hand's score
             local hand_score = SMODS.calculate_round_score and SMODS.calculate_round_score() or 0
             local projected_total = G.GAME.chips + math.floor(hand_score)
             if projected_total >= G.GAME.blind.chips then
@@ -566,7 +592,6 @@ Tao.screen_effects.boss_puzzle = {
     end,
 }
 
--- real GPU shader (assets/shaders/puzzle_shuffle.fs), one pass instead of draw-per-cell
 SMODS.ScreenShader{
     key = "tao_puzzle_shuffle",
     path = "puzzle_shuffle.fs",
@@ -585,7 +610,49 @@ SMODS.ScreenShader{
     end,
 }
 
--- actual effect drives from Tao.funcs.update_dvd_blind, called every frame from Game:update (globals.lua)
+LIGHT_DIAMETER_CARDS = 1.3 -- 1.3 card height so that you can still see cards + descriptions
+SMODS.Blind {
+    name = "boss_light",
+    key = "boss_light",
+    atlas = "blinds",
+    pos = { x = 0, y = 7 },
+    dollars = 6,
+    mult = 2,
+    discovered = true,
+    loc_txt = {
+        name = 'The Light',
+        text = {
+            "DARK, DARKER,",
+            "YET DARKER"
+        }
+    },
+    boss = { min = 0 },
+    boss_colour = HEX('2b2b3d'),
+}
+
+-- nothing moves on screen, so this one needs no cursor remap entry
+local function tao_light_is_active()
+    if not G.STAGE or G.STATE == G.STATES.SPLASH then return false end
+    return G.GAME and G.GAME.blind and G.GAME.blind.config and G.GAME.blind.config.blind
+        and G.GAME.blind.config.blind.key == "bl_tao_boss_light" and not G.GAME.blind.disabled
+end
+
+SMODS.ScreenShader{
+    key = "tao_light_mask",
+    path = "light_mask.fs",
+    order = 1002,
+    should_apply = function(self) return tao_light_is_active() end,
+    send_vars = function(self)
+        local w, h = love.graphics.getWidth(), love.graphics.getHeight()
+        local mx, my = love.mouse.getPosition()
+        return {
+            light_pos = { mx / w, my / h },
+            light_radius = (0.5 * LIGHT_DIAMETER_CARDS * G.CARD_H * G.TILESIZE * G.TILESCALE) / h,
+        }
+    end,
+}
+
+-- actual effect in Tao.funcs.update_dvd_blind, called every frame from Game:update (globals.lua)
 SMODS.Blind {
     name = "boss_dvd",
     key = "boss_dvd",
@@ -605,10 +672,10 @@ SMODS.Blind {
     boss_colour = HEX('cc4974'),
 }
 
--- hardcoded bounce ranges for boss_dvd, tweak freely
-DVD_SPEED_MIN = 3.0        -- game units/sec, re-rolled fresh (no delta from old speed) on every wall bounce
+-- hardcoded bounce ranges for boss_dvd
+DVD_SPEED_MIN = 3.0        -- game units/sec
 DVD_SPEED_MAX = 7.0
-DVD_ANGLE_DELTA_DEG = 5   -- +/- degrees layered on top of the mirror-reflection angle on every bounce
+DVD_ANGLE_DELTA_DEG = 5   -- every bounce is normal but adds/substracts a random 0-5 degree delta to the angle for randomness
 
 Tao.dvd = {
     active = false,
@@ -624,7 +691,7 @@ function Tao.funcs.dvd_random_float(seed_key, min, max)
     return min + pseudorandom(seed_key) * (max - min)
 end
 
--- collects a UIElement and all its descendants (button -> row -> text) into a flat list
+-- collects a UIElement and all things attached to it (button > row > text) into a flat list
 function Tao.funcs.dvd_collect_subtree(elem, out)
     out = out or {}
     out[#out + 1] = elem
@@ -705,7 +772,7 @@ function Tao.funcs.dvd_resolve_button_collision(a, b, seed_a, seed_b)
     if overlap_x <= 0 or overlap_y <= 0 then return end -- not actually touching
 
     if overlap_x < overlap_y then
-        -- left/right collision: push apart along x, flip both buttons' x velocity
+        -- left/right collision: push apart along x, flip both buttons x velocity
         local push = overlap_x / 2 + 0.001
         local a_is_left = da.pos_x < db.pos_x
         da.pos_x = da.pos_x + (a_is_left and -push or push)
@@ -713,7 +780,7 @@ function Tao.funcs.dvd_resolve_button_collision(a, b, seed_a, seed_b)
         Tao.funcs.dvd_reflect_velocity(da, true, false, seed_a)
         Tao.funcs.dvd_reflect_velocity(db, true, false, seed_b)
     else
-        -- top/bottom collision: push apart along y, flip both buttons' y velocity
+        -- top/bottom collision: push apart along y, flip both buttons y velocity
         local push = overlap_y / 2 + 0.001
         local a_is_above = da.pos_y < db.pos_y
         da.pos_y = da.pos_y + (a_is_above and -push or push)
@@ -766,7 +833,7 @@ SMODS.Atlas{
     frames = 42,
 }
 
--- key is read back off the object because SMODS prefixes it to "bl_tao_sans"
+-- bad time guy
 local SansBlind = SMODS.Blind{
     key = 'sans',
     atlas = 'sans_anim_atlas',
@@ -775,7 +842,7 @@ local SansBlind = SMODS.Blind{
     discovered = true,
     boss = { min = 0 },
     boss_colour = HEX('000000'),
-    flat_chips = 1, -- you beat sans by fighting him, not by scoring
+    flat_chips = 1, -- the easiest blind i said
     loc_txt = {
         name = 'Sans',
         text = {
@@ -801,12 +868,3 @@ function Blind:set_blind(blind, reset, silent)
     end
 end
 
--- suppresses the one stale post-freeze hand draw
-local sans_draw_from_deck_to_hand = G.FUNCS.draw_from_deck_to_hand
-G.FUNCS.draw_from_deck_to_hand = function(e)
-    if SANS.suppressNextHandDraw then
-        SANS.suppressNextHandDraw = false
-        e = 0
-    end
-    return sans_draw_from_deck_to_hand(e)
-end

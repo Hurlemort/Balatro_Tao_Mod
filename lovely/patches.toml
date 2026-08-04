@@ -149,3 +149,30 @@ if self.ability.name == 'Even Steven' and
     ))
 then'''
 match_indent = true
+
+# every joker that grants hands lands here, Burglar included (Tao.funcs.clamp_lost_deck_hands, globals.lua)
+[[patches]]
+[patches.pattern]
+target = "functions/common_events.lua"
+pattern = "G.GAME.current_round.hands_left = G.GAME.current_round.hands_left + mod"
+position = "after"
+payload = "Tao.funcs.clamp_lost_deck_hands()"
+match_indent = true
+
+# entering a round hands out the round's hands
+[[patches]]
+[patches.pattern]
+target = "functions/state_events.lua"
+pattern = "G.GAME.current_round.hands_left = (math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands))"
+position = "after"
+payload = "Tao.funcs.clamp_lost_deck_hands()"
+match_indent = true
+
+# cashing out into the shop refills them again for the next ante
+[[patches]]
+[patches.pattern]
+target = "functions/button_callbacks.lua"
+pattern = "G.GAME.current_round.hands_left = (math.max(1, G.GAME.round_resets.hands + G.GAME.round_bonus.next_hands))"
+position = "after"
+payload = "Tao.funcs.clamp_lost_deck_hands()"
+match_indent = true

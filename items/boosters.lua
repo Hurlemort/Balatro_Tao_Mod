@@ -58,8 +58,10 @@ SMODS.Booster{
     cost = 4,
     kind = "TaoPack",
     
+    -- the colour the pack opens to
+    ease_background_colour = function(self) ease_background_colour({ new_colour = HEX("4d0ba3") }) end,
+
     create_card = function(self, card, i)
-        ease_background_colour(HEX("a348e8"))
         return SMODS.create_card({
             set = "tao_joker_pool",
             area = G.pack_cards,
@@ -101,8 +103,10 @@ SMODS.Booster{
     cost = 6,
     kind = "TaoPack",
     
+    -- the colour the pack opens to
+    ease_background_colour = function(self) ease_background_colour({ new_colour = HEX("4d0ba3") }) end,
+
     create_card = function(self, card, i)
-        ease_background_colour(HEX("a348e8"))
         return SMODS.create_card({
             set = "tao_joker_pool",
             area = G.pack_cards,
@@ -144,8 +148,10 @@ SMODS.Booster{
     cost = 8,
     kind = "TaoPack",
     
+    -- the colour the pack opens to
+    ease_background_colour = function(self) ease_background_colour({ new_colour = HEX("4d0ba3") }) end,
+
     create_card = function(self, card, i)
-        ease_background_colour(HEX("a348e8"))
         return SMODS.create_card({
             set = "tao_joker_pool",
             area = G.pack_cards,
@@ -186,8 +192,10 @@ SMODS.Booster{
     cost = 4,
     kind = "TaoPack",
     
+    -- the colour the pack opens to
+    ease_background_colour = function(self) ease_background_colour({ new_colour = HEX("ab4c09") }) end,
+
     create_card = function(self, card, i)
-        ease_background_colour(HEX("a348e8"))
         return SMODS.create_card({
             set = "tao_joker_pool_legendary",
             area = G.pack_cards,

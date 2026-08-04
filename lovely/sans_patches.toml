@@ -23,7 +23,7 @@ priority = 0
 target = "functions/UI_definitions.lua"
 pattern = "{n=G.UIT.T, config={text = string.rep(localize(\"$\"), blind_choice.config.dollars)..'+', scale = 0.35, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.MONEY, shadow = not disabled}}"
 position = "at"
-payload = "{n=G.UIT.T, config={text = (blind_choice.config.dollars >= 10 and (localize(\"$\")..blind_choice.config.dollars..'+')) or (string.rep(localize(\"$\"), blind_choice.config.dollars)..'+'), scale = 0.35, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.MONEY, shadow = not disabled}}"
+payload = "{n=G.UIT.T, config={text = (blind_choice.config.key == \"bl_tao_boss_tree\" and 'EGG') or (blind_choice.config.dollars >= 10 and (localize(\"$\")..blind_choice.config.dollars..'+')) or (string.rep(localize(\"$\"), blind_choice.config.dollars)..'+'), scale = 0.35, colour = disabled and G.C.UI.TEXT_INACTIVE or G.C.MONEY, shadow = not disabled}}"
 match_indent = true
 
 # Spot 2: hovering a blind in the run info/collection screen
@@ -36,7 +36,7 @@ match_indent = true
 target = "functions/UI_definitions.lua"
 pattern = "{n=G.UIT.O, config={object = DynaText({string = {_dollars and string.rep(localize('$'),_dollars) or '-'}, colours = {G.C.MONEY}, rotate = true, bump = true, silent = true, scale = 0.45})}},"
 position = "at"
-payload = "{n=G.UIT.O, config={object = DynaText({string = {_dollars and ((_dollars >= 10 and (localize('$').._dollars..'+')) or string.rep(localize('$'),_dollars)) or '-'}, colours = {G.C.MONEY}, rotate = true, bump = true, silent = true, scale = 0.45})}},"
+payload = "{n=G.UIT.O, config={object = DynaText({string = {(blind.key == 'bl_tao_boss_tree' and 'EGG') or (_dollars and ((_dollars >= 10 and (localize('$').._dollars..'+')) or string.rep(localize('$'),_dollars)) or '-')}, colours = {G.C.MONEY}, rotate = true, bump = true, silent = true, scale = 0.45})}},"
 match_indent = true
 
 # Spot 3: the top-left HUD reward text while a blind is actually being played
@@ -48,7 +48,16 @@ match_indent = true
 target = "blind.lua"
 pattern = "G.GAME.current_round.dollars_to_be_earned = self.dollars > 0 and (string.rep(localize('$'), self.dollars)..'') or ('')"
 position = "at"
-payload = "G.GAME.current_round.dollars_to_be_earned = self.dollars > 0 and ((self.dollars >= 10 and (localize('$')..self.dollars..'+')) or (string.rep(localize('$'), self.dollars)..'')) or ('')"
+payload = "G.GAME.current_round.dollars_to_be_earned = (self.config.blind and self.config.blind.key == 'bl_tao_boss_tree' and 'EGG') or (self.dollars > 0 and ((self.dollars >= 10 and (localize('$')..self.dollars..'+')) or (string.rep(localize('$'), self.dollars)..'')) or (''))"
+match_indent = true
+
+# Spot 4a: the same assignment sits behind "if self.dollars > 0 then", which boss_tree never satisfies
+[[patches]]
+[patches.pattern]
+target = "blind.lua"
+pattern = "if self.dollars > 0 then"
+position = "at"
+payload = "if self.dollars > 0 or (self.config.blind and self.config.blind.key == 'bl_tao_boss_tree') then"
 match_indent = true
 
 # Spot 4: same HUD text, but set from Blind:load (restoring a blind's state
@@ -58,7 +67,7 @@ match_indent = true
 target = "blind.lua"
 pattern = "G.GAME.current_round.dollars_to_be_earned = string.rep(localize('$'), self.dollars)..''"
 position = "at"
-payload = "G.GAME.current_round.dollars_to_be_earned = (self.dollars >= 10 and (localize('$')..self.dollars..'+')) or (string.rep(localize('$'), self.dollars)..'')"
+payload = "G.GAME.current_round.dollars_to_be_earned = (self.config.blind and self.config.blind.key == 'bl_tao_boss_tree' and 'EGG') or (self.dollars >= 10 and (localize('$')..self.dollars..'+')) or (string.rep(localize('$'), self.dollars)..'')"
 match_indent = true
 
 # blind-select screen computes its own preview number before set_blind runs, so a

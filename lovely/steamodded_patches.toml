@@ -1,0 +1,13 @@
+[manifest]
+version = "1.0.0"
+dump_lua = true
+priority = 0
+
+# clears the ping-pong canvas Steamodded binds for each screen shader pass
+[[patches]]
+[patches.pattern]
+target = "game.lua"
+pattern = "love.graphics.setCanvas(current_canvas)"
+position = "after"
+payload = "love.graphics.clear(0, 0, 0, 1)"
+match_indent = true

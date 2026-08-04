@@ -1663,12 +1663,6 @@ SMODS.Joker{
                 xmult = card.ability.extra.xmult,
             }
         end
-    end,
-
-    -- the video is rebuilt from frame 0 on reload, so ask it to seek to the saved watch time
-    load = function(self, card, card_table, other_card)
-        local ab = Tao.assets.angry_birds
-        ab.seek_to = math.max(ab.seek_to or 0, card.ability.extra.watched or 0)
     end
 }
 -- FINISHED

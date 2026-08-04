@@ -4,12 +4,7 @@ extern number cols;
 extern number rows;
 extern number cell_size;
 
-// Square-shuffle for the Puzzle boss blind. One real GPU shader pass (like
-// record_spin.fs) instead of one love.graphics.draw() call per grid cell --
-// dozens of small draw calls every single frame left very little headroom,
-// which is exactly what let a momentary CPU/GPU spike (e.g. constructing a
-// new UI element, like the deck-hover preview) tip a frame over its vsync
-// deadline into a torn frame.
+// Shuffles the screen into squares for the Puzzle boss blind.
 vec4 effect(vec4 colour, Image texture, vec2 texture_coords, vec2 screen_coords)
 {
     float dc = floor(screen_coords.x / cell_size);

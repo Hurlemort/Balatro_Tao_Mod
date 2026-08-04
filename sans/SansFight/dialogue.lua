@@ -487,8 +487,7 @@ function SANS.UpdateSpareSequence(dt)
         s.fadeTimer = (s.fadeTimer or 0) + dt
         local t = math.min(s.fadeTimer / SPARE_FADE_TIME, 1)
 
-        -- reveal tied directly to fade progress (not its own timer) so it always finishes exactly as the screen goes
-        -- black; volume drops along with it (1 - t), the same falloff the black overlay gives the text's contrast
+        -- fadeout screen
         local targetRevealed = math.floor(t * #WRONG_ONE_TEXT)
         if targetRevealed > (s.wrongOneRevealed or 0) then
             for i = (s.wrongOneRevealed or 0) + 1, targetRevealed do
@@ -585,12 +584,12 @@ function SANS.DrawFinalSpareVideo()
     end
 end
 
--- Win sequence: fade to white -> 3-page text -> fade to black -> fight_ending.ogv looping w/ spaceship.ogg, Enter after 1 loop calls WinFight
+-- Win sequence: fade to white then 3-page text then fade to black then fight_ending.ogv looping w/ spaceship.ogg, Enter after 1 loop calls WinFight
 SANS.winSequence = SANS.winSequence or { active = false, phase = nil, video = nil, loops = 0 }
 
 -- same paragraph-array convention as the spare ending's textPages above (each table element is a paragraph, a plain "\n" inside one is just a word-wrap continuation line)
 SANS.winSequence.textPages = {
-    { "Dont worry, you beat him.", "No dirty tricks from now one." },
+    { "Dont worry, you beat him.", "No dirty tricks from now on." },
     { "Here,", "Relax a little before you\nstart Balatroing again." },
     { "I got some nice calming music for you.", "Oh! I even found the perfect\nvideo to fit the music." },
 }
