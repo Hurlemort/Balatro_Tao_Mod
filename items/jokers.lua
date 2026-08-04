@@ -1814,7 +1814,7 @@ SMODS.Joker{
         end
     end
 }
--- FINISHED; raises Mult via SMODS.Scoring_Parameters.mult (technique from Cryptid)
+-- FINISHED; raises Mult via Talisman's e_mult
 SMODS.Joker{
     key = "Terence",
     config = { extra = { mult_exp = 1.5, hands = 1 } },
@@ -1845,14 +1845,9 @@ SMODS.Joker{
 
     calculate = function(self, card, context)
         if context.joker_main and context.cardarea == G.jokers then
-            local mult_param = SMODS.Scoring_Parameters.mult
-            local current = mult_param.current
-            if current > 0 then
-                local target = current ^ card.ability.extra.mult_exp
-                mult_param:modify(target - current)
+            if to_big(SMODS.Scoring_Parameters.mult.current) > to_big(0) then -- a negative Mult would go NaN under ^1.5
                 return {
-                    message = "^" .. card.ability.extra.mult_exp .. " Mult",
-                    colour = G.C.NEGATIVE,
+                    e_mult = card.ability.extra.mult_exp,
                 }
             end
         end
