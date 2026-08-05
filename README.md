@@ -23,7 +23,7 @@ The entirety of Undertale's Sans boss fight! New Jokers! Explosions! New Bosses!
 1. Install the Lovely injector: https://github.com/ethangreen-dev/lovely-injector. (Optional if you already downloaded Mods via BMM)
 2. Download [Steamodded](https://github.com/Steamodded/smods) and add it to your `%AppData%Roaming\Balatro\mods` folder. (Optional if you already downloaded Mods via BMM)
 3. Download [Amulet](https://github.com/frostice482/amulet) OR [Talisman](https://github.com/SpectralPack/Talisman) and add it to your `%AppData%Roaming\Balatro\mods` folder. (Can be done via BMM)
-4. Download the [latest release](https://github.com/Hurlemort/Balatro_Tao_Mod/releases/tag/release) of the mod and extract it to : `%AppData%Roaming\Balatro\mods`.
+4. Download the [latest release](https://github.com/Hurlemort/Balatro_Tao_Mod/releases/) of the mod and extract it to : `%AppData%Roaming\Balatro\mods`.
 
 
 ## Huge Thanks to
