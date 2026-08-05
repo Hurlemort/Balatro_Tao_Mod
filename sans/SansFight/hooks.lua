@@ -559,6 +559,14 @@ function SANS.UpdateHealth()
 
     -- reset color
     love.graphics.setColor(1, 1, 1, 1)
+
+    -- HP and KR images from both sides of the health bar
+    for _, name in ipairs({ "HP", "KR" }) do
+        local img = SANS.images[name]
+        if img and img.visible then
+            love.graphics.draw(img, img.x, img.y, img.rotation, img.scaleX, img.scaleY)
+        end
+    end
 end
 
 
@@ -1005,23 +1013,6 @@ function SANS.hooks.Keypressed(key, scancode, isrepeat)
         SANS.invincible = not SANS.invincible
         print("[TAO][SANS][CHEAT] Manual invicibility : " .. (SANS.invincible and "ON" or "OFF"))
     end
-    -- both stop the running attack first, same as the real triggers do
-    if scancode == "f" and not isrepeat then
-        print("[TAO][SANS][CHEAT] Fight ending")
-        SANS.attackrunner.active = nil
-        SANS.DestroyAllAttacks()
-        SANS.MENU.state = false
-        SANS.StartWinSequence()
-    end
-    if scancode == "g" and not isrepeat then
-        print("[TAO][SANS][CHEAT] Spare ending")
-        SANS.attackrunner.active = nil
-        SANS.DestroyAllAttacks()
-        SANS.MENU.state = false
-        SANS.MENU.substate = nil
-        SANS.StartSpareSequence()
-    end
-
     -- a dialogue bubble owns Enter and swallows every other key too, so menu nav can't sneak through underneath it
     if SANS.dialogue.active then
         if scancode == "return" and not isrepeat then

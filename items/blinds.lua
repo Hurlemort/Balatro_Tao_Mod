@@ -78,20 +78,30 @@ SMODS.Blind {
 --     boss_colour = HEX('de4e5c'),
 -- }
 
+-- 136px cells, 4x the usual chip
+SMODS.Atlas{
+    key = "tree_blind",
+    path = "tree_blind.png",
+    px = 136,
+    py = 136,
+    frames = 21,
+    atlas_table = "ANIMATION_ATLAS",
+}
+
 -- pays an Egg instead of money; the "EGG" reward text comes from the blind.lua patches (sans_patches.toml)
 SMODS.Blind {
     name = "boss_tree",
     key = "boss_tree",
-    atlas = "blinds",
-    pos = { x = 0, y = 1 },
+    atlas = "tree_blind",
+    pos = { x = 0, y = 0 },
     dollars = 0,
     mult = 2,
     discovered = true,
     loc_txt = {
-        name = 'The Tree',
+        name = 'TREE',
         text = {
-            "Pays an {C:attention}Egg{}",
-            "instead of money",
+            "THE FORGOTTEN",
+            "MAN"
         }
     },
     boss = { min = 0 },
@@ -100,7 +110,7 @@ SMODS.Blind {
     defeat = function(self)
         local egg = SMODS.create_card({ set = 'Joker', key = 'j_egg', skip_materialize = true })
         egg:add_to_deck()
-        G.jokers:emplace(egg) -- emplace ignores the slot limit, so the Egg can overflow
+        G.jokers:emplace(egg) -- made to overflow because gaster does the fuck he wants
         egg:juice_up(0.3, 0.5)
     end,
 }

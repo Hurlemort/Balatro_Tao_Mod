@@ -12,7 +12,11 @@ local function update(self, dt)
         -- new_round() is still mid-setup when the blind hook freezes us, so let it finish behind the cutscene
         -- instead of leaving its blocking delays and hand draw queued up to fire after the fight
         if SANS.awaitingRoundSetup then
+            -- the round sets itself up mute; sans owns the speakers during the cutscene
+            local real_play_sound, real_modulate_sound = play_sound, modulate_sound
+            play_sound, modulate_sound = function() end, function() end
             update_hook(self, dt)
+            play_sound, modulate_sound = real_play_sound, real_modulate_sound
             SANS.roundSetupTimer = (SANS.roundSetupTimer or 0) + dt
             if G.STATE == G.STATES.SELECTING_HAND or SANS.roundSetupTimer > 8 then
                 SANS.awaitingRoundSetup = false

@@ -74,7 +74,7 @@ for _, file in ipairs(files) do
 	f()
 end
 
--- Sans bossfight, fused in from its own old mod; loaded after globals.lua so its hooks wrap ours, freezing our own per-tick stuff during the fight
+-- loads after globals.lua so the sans hooks wrap Tao's and freeze them during the fight
 SANS = SANS or {}
 SANS.path = mod_path .. "sans/"
 

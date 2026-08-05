@@ -11,5 +11,5 @@
   "badge_colour": "aa00ff",
   "badge_text_colour": "ffffff",
   "version": "1.0.2",
-  "dependencies": ["Steamodded", "Talisman"]
+  "dependencies": ["Steamodded", "Talisman|Amulet"]
 }

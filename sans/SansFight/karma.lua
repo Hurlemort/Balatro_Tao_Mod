@@ -307,7 +307,16 @@ function SANS.WinFight()
     G.STATE = G.STATES.HAND_PLAYED
     G.STATE_COMPLETE = true
     end_round()
-    check_for_unlock({ type = "ach_tao_beat_sans" })
+    -- the badge waits out the round teardown so it lands on a settled screen
+    G.E_MANAGER:add_event(Event({
+        trigger = 'after',
+        delay = 0.7,
+        blocking = false,
+        func = function()
+            check_for_unlock({ type = "ach_tao_beat_sans" })
+            return true
+        end
+    }))
 end
 
 -- what actually cracks the heart, once the "alone" hold finishes
