@@ -13,7 +13,7 @@ The entirety of Undertale's Sans boss fight! New Jokers! Explosions! New Bosses!
 
 ### Via Balatro Mod Manager
 
-/!\ AS OF RIGHT NOW, THE MOD IS STILL IN APPROVAL AND NOT YET INDEXED : THIS MEDHOT DOESNT WORK YET /!\
+/!\ AS OF RIGHT NOW, THE MOD IS STILL IN APPROVAL AND NOT YET INDEXED : THIS METHOD DOESNT WORK YET /!\
 1. Install Balatro Mod Manager : https://balatro-mod-manager.dasguney.com/.
 2. Search for "TAO".
 3. Install and play!
@@ -30,5 +30,5 @@ The entirety of Undertale's Sans boss fight! New Jokers! Explosions! New Bosses!
 
 - Seacap54 for helping me learn the basics and discuss modding balatro!
 - Jcw87 for his extremely helpful advices and his original Construct 2 remake of Sans' boss fight!!
-- Blue Spaghetti, EricTheToon and Héroe Legendario for trailer footage as well as playtesting!
+- Blue Spaghetti, EricTheToon, Affocoder and Héroe Legendario for trailer footage as well as playtesting!
 - Yahimod and Cryptid for the main inspo and code stealing :)
