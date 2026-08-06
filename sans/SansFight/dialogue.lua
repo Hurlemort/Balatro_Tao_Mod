@@ -360,8 +360,7 @@ end
 -- only re-sampling the video's texture when its own reported timeline actually crosses into a new
 -- source frame (tracked via video:tell() against source_fps) -- redrawing straight from the raw Video
 -- object every render frame touches a texture that LOVE's background decode thread updates on its own
--- schedule, far less often than a high-refresh-rate render loop calls draw. Same fix as Tao's Angry
--- Birds Joker video (see Tao/globals.lua's identical draw_angry_birds_canvas), applied here to Sans's
+-- schedule, far less often than a high-refresh-rate render loop calls draw. Applied here to Sans's
 -- three cutscene videos. Returns the canvas to draw in place of the raw video (falls back to the raw
 -- video if given a nil video, so callers can do `love.graphics.draw(GetStableVideoCanvas(...) or video, ...)`).
 function SANS.GetStableVideoCanvas(state, key, video, source_fps)

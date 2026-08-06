@@ -5,14 +5,6 @@ SMODS.Atlas{
     py = 95
 }
 
--- fallback sprite for previews; in play the card draws the video canvas
-SMODS.Atlas{
-    key = "angry_birds",
-    path = "angry_birds.png",
-    px = 168,
-    py = 94
-}
-
 SMODS.Sound({
     key = "vineboom",
     path = "vineboom.ogg",
@@ -1619,48 +1611,6 @@ SMODS.Joker{
             return {
                 message = "Dice Shard!",
                 colour = G.C.SECONDARY_SET.Spectral,
-            }
-        end
-    end
-}
--- FINISHED
-SMODS.Joker{
-    key = "angrybirdsmovie",
-    config = { extra = { xmult = 1, xmult_mod = 0.0025, watched = 0} },
-    pos = { x = 0, y = 0 },
-    soul_pos = nil,
-    rarity = 2,
-    cost = 6,
-    blueprint_compat = true,
-    eternal_compat = true,
-    perishable_compat = true,
-    unlocked = true,
-    discovered = true,
-    effect = nil,
-    atlas = "angry_birds",
-    pools = {["tao_joker_pool"] = true, ["tao_joker_pool_legendary"] = true},
-
-    display_size = {w = 126, h = 71},
-
-    loc_txt = {
-        name = "The_Angry_Birds_Movie_(2016).mp4",
-        text = {
-            "This Joker gains",
-            "{X:mult,C:white}X#1#{} Mult per second",
-            "until the movie ends",
-            "{C:inactive}(Currently {X:mult,C:white}X#2#{} {C:inactive}Mult){}"
-        }
-    },
-
-    loc_vars = function(self, info_queue, card)
-        return { vars = { string.format("%.4f", card.ability.extra.xmult_mod), card.ability.extra.xmult } }
-    end,
-
-    calculate = function(self, card, context)
-        if context.joker_main and context.cardarea == G.jokers then
-            return {
-                card = card,
-                xmult = card.ability.extra.xmult,
             }
         end
     end

@@ -466,7 +466,7 @@ SMODS.Blind {
 
 Tao.screen_effects.boss_record = {
     is_active = function()
-        -- same early-loading guard as the Angry Birds hooks (globals.lua)
+        -- nothing to draw until the game is past loading
         if not G.STAGE or G.STATE == G.STATES.SPLASH then return false end
         return G.GAME and G.GAME.blind and G.GAME.blind.config and G.GAME.blind.config.blind
             and G.GAME.blind.config.blind.key == "bl_tao_boss_record" and not G.GAME.blind.disabled
