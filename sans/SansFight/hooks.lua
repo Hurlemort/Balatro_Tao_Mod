@@ -564,7 +564,7 @@ function SANS.UpdateHealth()
     for _, name in ipairs({ "HP", "KR" }) do
         local img = SANS.images[name]
         if img and img.visible then
-            love.graphics.draw(img, img.x, img.y, img.rotation, img.scaleX, img.scaleY)
+            love.graphics.draw(img.img, img.x, img.y, img.rotation, img.scaleX, img.scaleY)
         end
     end
 end
